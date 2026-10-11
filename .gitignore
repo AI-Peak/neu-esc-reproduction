@@ -1,0 +1,64 @@
+# Local runtimes and Python/build caches
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+/build/
+/dist/
+
+# Access-controlled source/prepared data (manifests remain reviewable)
+/data/raw/
+/data/processed/
+/data/cache/
+/data/resources/
+/data/tools/
+/dataset/
+
+# Runtime outputs, checkpoints, caches, and downloaded weights
+/runs/
+/artifacts/
+/checkpoints/
+/models/
+/logs/
+/wandb/
+/.cache/
+/hf_cache/
+/torch_cache/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+*.h5
+*.hdf5
+*.jar
+
+# Secrets and authentication artifacts
+.env
+.env.*
+*.pem
+*.key
+*credentials*.json
+*service_account*.json
+*service-account*.json
+token.json
+tokens.json
+secrets.json
+/credentials/
+/secrets/
+/drive/
+/.config/
+.git-credentials
+.netrc
+
+# Machine-specific notebooks/editors/temp output
+.ipynb_checkpoints/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+/tmp/

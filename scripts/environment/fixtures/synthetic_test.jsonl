@@ -1,0 +1,2 @@
+{"sample_id": "test:000000:4c78628b7765", "split": "test", "source_row": 0, "text": "Synthetic neutral example", "text_segmented": null, "sentiment": 0, "topic": 3}
+{"sample_id": "test:000001:4c78628b7765", "split": "test", "source_row": 1, "text": "Synthetic positive example", "text_segmented": null, "sentiment": 1, "topic": 2}

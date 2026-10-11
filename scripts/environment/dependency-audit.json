@@ -1,0 +1,415 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-11 Asia/Saigon",
+  "reference_repository": "https://github.com/hung20gg/multi-task-bert",
+  "reference_commit": "b5637cc0a8a7b5e88e794d180c11902405548eb5",
+  "reference_files": [
+    {
+      "path": "train.py",
+      "sha256": "14eddac67286ec8143a8c6e1a100f89b07a17742303cbd3595845d207f509f74",
+      "imports": [
+        "gc",
+        "pandas",
+        "torch",
+        "trainer.base_trainer",
+        "utils.dataloader"
+      ]
+    },
+    {
+      "path": "trainmultihead.py",
+      "sha256": "f5d57fc1cf26797afd29124b5feab965871251bfae5272342cab97a39af05106",
+      "imports": [
+        "gc",
+        "pandas",
+        "torch",
+        "trainer.head_trainer",
+        "utils.dataloader"
+      ]
+    },
+    {
+      "path": "predict.py",
+      "sha256": "71d1dd115061c3f3c63de2a9998650c7c1c9a2179be9483dfdfca3f0653c63f8",
+      "imports": [
+        "architecture.bert2head.model",
+        "gc",
+        "pandas",
+        "torch",
+        "trainer.head_trainer",
+        "utils.dataloader"
+      ]
+    },
+    {
+      "path": "Trainer/head_trainer.py",
+      "sha256": "acfb3263e46293069ad024e6635cb309c93892031b04ac99e33d9665b55562e7",
+      "imports": [
+        "architecture.bert2head.model",
+        "numpy",
+        "sklearn.metrics",
+        "time",
+        "torch",
+        "torch.nn",
+        "torch.optim",
+        "tqdm",
+        "utils.loss_function",
+        "wandb"
+      ]
+    },
+    {
+      "path": "trainer/base_trainer.py",
+      "sha256": "0947785a33b69251633d0026ecbc6cf20ecd9163041027361981f2377e71549a",
+      "imports": [
+        "copy",
+        "numpy",
+        "pandas",
+        "sklearn.metrics",
+        "torch",
+        "tqdm",
+        "transformers"
+      ]
+    },
+    {
+      "path": "utils/dataloader.py",
+      "sha256": "033df8846dfa2a684f6117f255618d2588fd304d24e6232c39df05548ee042e2",
+      "imports": [
+        "copy",
+        "numpy",
+        "torch",
+        "torch.utils.data",
+        "transformers"
+      ]
+    },
+    {
+      "path": "utils/loss_function.py",
+      "sha256": "d13004c8224071819fc3acb3394664c0b33ecd1a1df3ebc09595aa3a5d79db7f",
+      "imports": [
+        "itertools",
+        "torch",
+        "torch.nn",
+        "torch.nn.functional",
+        "typing"
+      ]
+    },
+    {
+      "path": "architecture/bert2head/model.py",
+      "sha256": "00b50edfe0af3dd2a0ed4c76b322419ac5803f00b6099c4a69d013efafca65ff",
+      "imports": [
+        "torch",
+        "torch.nn",
+        "torch.nn.functional",
+        "transformers"
+      ]
+    }
+  ],
+  "local_import_audit": [
+    {
+      "path": "src/neu_esc/__init__.py",
+      "sha256": "c45c0fab37ee5144fe63691b2629542b7d0e00f24269bfbed151d914830d9c02",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/__init__.py",
+      "sha256": "2ceade004e158011dccd7fbf2d76412d9262fab326026a841ff61f0ef72f14f4",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/audit.py",
+      "sha256": "be91b4d687db4fb602bb899a4332f31d86f7c6ee62480b6bd94ed6dcab8ce8b0",
+      "imports": [
+        "__future__",
+        "collections",
+        "hashlib",
+        "itertools",
+        "unicodedata"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/common.py",
+      "sha256": "e80bb93cfad7fe1df68b5927456e77c5b55c9bf60f042e1d9b39a6130e7e3e3e",
+      "imports": [
+        "__future__",
+        "csv",
+        "decimal",
+        "hashlib",
+        "json",
+        "os",
+        "pathlib",
+        "tempfile",
+        "urllib.request",
+        "yaml"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/dataset.py",
+      "sha256": "56a2136d81ce4f797efa125d5593d6d8bf14b200a0c7b367518b698c570a20d4",
+      "imports": [
+        "__future__",
+        "json",
+        "pathlib"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/prepare.py",
+      "sha256": "d49427d09f00fa7d0ef98edb2fb2be747a64fd80b3be62e44adf2677f537ff3e",
+      "imports": [
+        "__future__",
+        "argparse",
+        "contextlib",
+        "hashlib",
+        "json",
+        "os",
+        "pathlib"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/resources.py",
+      "sha256": "e625e0dbef7aa4971d90edd72e1039ce74e3f43af403a9628297282a753e93fa",
+      "imports": [
+        "argparse"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/data/segmentation.py",
+      "sha256": "09ac0123c9f7e19fa7ab4b46c0ef326a77efda53ed0bd7d4ee539d6f10c31a6d",
+      "imports": [
+        "__future__",
+        "base64",
+        "json",
+        "os",
+        "pathlib",
+        "queue",
+        "shutil",
+        "subprocess",
+        "threading"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/evaluation/__init__.py",
+      "sha256": "5334dd750321033139541a78493eefe0be21827c70fc602e8c45230f151d4ff5",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/evaluation/aggregate.py",
+      "sha256": "5cf7289c8de15448b0e6117b8998a77c25d5cd54dba010b7734f958d4e487f63",
+      "imports": [
+        "__future__",
+        "collections.abc",
+        "math",
+        "numbers",
+        "statistics"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/evaluation/audit_reference.py",
+      "sha256": "1be051f425b4d6693b202f6f2d9f4201e53c337b962ebc78d5b6dac246451d83",
+      "imports": [
+        "argparse",
+        "csv",
+        "hashlib",
+        "json",
+        "pathlib",
+        "pypdf",
+        "re"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/evaluation/evaluate.py",
+      "sha256": "a664e8fda4e40e2493ae4eed9364a59f92cd8482df605aaea385a157e4a56571",
+      "imports": [
+        "PIL",
+        "__future__",
+        "argparse",
+        "collections.abc",
+        "csv",
+        "hashlib",
+        "json",
+        "math",
+        "neu_esc.data.dataset",
+        "numbers",
+        "pathlib",
+        "typing",
+        "yaml"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/evaluation/plotting.py",
+      "sha256": "bc29e0c1b38bad7d8e278c4cf7bf229a8f6739d82d66c475b0798830812d12e5",
+      "imports": [
+        "PIL",
+        "pathlib"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/losses/__init__.py",
+      "sha256": "28694acce4df6695428bf270f251989e33152c413ba8e9e53b0beed1d9557553",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/losses/classification.py",
+      "sha256": "0c74e8b0ea96fa4aa69e015645b98dbbe3dcc9386234ac408f9e21d0165d0518",
+      "imports": [
+        "torch.nn.functional"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/losses/mlm.py",
+      "sha256": "89529d372f5ef049b217bd8192d37df604139519c394505b2dd44935f43574b6",
+      "imports": [
+        "dataclasses",
+        "torch",
+        "torch.nn.functional"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/losses/smart.py",
+      "sha256": "feaed41493432223b3ab48b6fd9c0c5e17127a14fd07dd331a78cc638b8ee061",
+      "imports": [
+        "contextlib",
+        "torch",
+        "torch.nn.functional"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/models/__init__.py",
+      "sha256": "0e37909447f0872486e3cdd5151afaf34e6dfd67d60135c0890a9c706ca67ede",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/models/encoder.py",
+      "sha256": "d257424c67f5409fd019ff5c55f7f8b82b8a74463188492c93a19ac0b1de7c3c",
+      "imports": [
+        "__future__",
+        "torch",
+        "transformers"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/__init__.py",
+      "sha256": "c36e4f2e9b570e92f70a3d5eb6e7d9ea6b79c43b55bb59bc77519b95913c634c",
+      "imports": [],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/checkpoint.py",
+      "sha256": "ef4f85da184b188a0fbaee06fe6ce69dc34de5cd0f4405064d30b029540fc120",
+      "imports": [
+        "__future__",
+        "json",
+        "numpy",
+        "os",
+        "pathlib",
+        "random",
+        "torch",
+        "uuid"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/config.py",
+      "sha256": "b009fead7620cfcd555a981352f0ae6134c57833d9d0401bfe8a08152e3b8dae",
+      "imports": [
+        "__future__",
+        "copy",
+        "hashlib",
+        "json",
+        "pathlib",
+        "re",
+        "yaml"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/engine.py",
+      "sha256": "20ee58c0635d7840a35a4ac529e75ff8c277f7ce519123f223ea13313c0a587e",
+      "imports": [
+        "__future__",
+        "contextlib",
+        "math",
+        "neu_esc.losses",
+        "neu_esc.losses.smart",
+        "numpy",
+        "pathlib",
+        "random",
+        "torch"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/predict.py",
+      "sha256": "5907339c462fc9ef47bd9127d433dcf82e9322ea9c9dbb6b2987018a2526d8fc",
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "neu_esc.models",
+        "pathlib",
+        "tempfile",
+        "torch",
+        "transformers"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/runtime.py",
+      "sha256": "60fb9c700326471a4cdad42528c057571047a4ccf8a8e3b4021cea4a536b6855",
+      "imports": [
+        "__future__",
+        "importlib.metadata",
+        "json",
+        "neu_esc.data.dataset",
+        "neu_esc.evaluation.evaluate",
+        "neu_esc.models",
+        "os",
+        "pathlib",
+        "platform",
+        "subprocess",
+        "sys",
+        "torch",
+        "transformers"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    },
+    {
+      "path": "src/neu_esc/training/train.py",
+      "sha256": "937db5a50dbf36255cab1bed39a9056990fcf3d29542688e1422f11387c8a919",
+      "imports": [
+        "__future__",
+        "argparse",
+        "datetime",
+        "json",
+        "neu_esc.models",
+        "os",
+        "pathlib",
+        "transformers",
+        "yaml"
+      ],
+      "readiness": "WIP observed; not staged by 04"
+    }
+  ],
+  "assumptions": [
+    "transformers<5 is a compatibility choice, not a recovered paper version",
+    "sentencepiece is a tokenizer-support dependency; checkpoint verification pending",
+    "llm group empty until module 05 hands off real imports/dependency requests"
+  ],
+  "excluded": [
+    "wandb: upstream import; no local implementation requirement and no tracking service activated"
+  ]
+}

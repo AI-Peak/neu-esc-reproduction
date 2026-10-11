@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-11T14:35:58.776389+00:00",
+  "display_timezone": "Asia/Saigon",
+  "python": "3.10.11",
+  "platform": {
+    "system": "Windows",
+    "release": "10",
+    "machine": "AMD64"
+  },
+  "packages": {
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "matplotlib": "3.10.9",
+    "PyYAML": "6.0.3",
+    "pytest": "9.1.1",
+    "setuptools": "84.0.0",
+    "pip": "23.0.1",
+    "sentencepiece": "0.2.2",
+    "tokenizers": "0.22.2"
+  },
+  "cuda_available": false,
+  "java": {
+    "available": true,
+    "executable_override_used": false,
+    "version_lines": [
+      "java version \"22.0.2\" 2024-07-16",
+      "Java(TM) SE Runtime Environment (build 22.0.2+9-70)",
+      "Java HotSpot(TM) 64-Bit Server VM (build 22.0.2+9-70, mixed mode, sharing)"
+    ]
+  },
+  "checks": [
+    {
+      "command": "uv lock --check",
+      "exit_code": 0,
+      "result": "87 packages resolved; lock current"
+    },
+    {
+      "command": "python scripts/environment/lock_cpu.py",
+      "exit_code": 0,
+      "result": "CPU metadata resolved; 8 explicit hashed wheel URLs emitted"
+    },
+    {
+      "command": "uv pip install --python .venv/Scripts/python.exe --require-hashes -r requirements-cpu.lock",
+      "exit_code": 0,
+      "result": "52 packages installed; wheel hashes verified"
+    },
+    {
+      "command": ".venv/Scripts/python -m ensurepip --upgrade",
+      "exit_code": 0,
+      "result": "pip 23.0.1 bootstrapped in uv-created venv"
+    },
+    {
+      "command": ".venv/Scripts/python -m pip install --no-deps --no-build-isolation -e .",
+      "exit_code": 0,
+      "result": "editable package 0.1.0 installed"
+    },
+    {
+      "command": ".venv/Scripts/python -m pip check",
+      "exit_code": 0,
+      "result": "No broken requirements found"
+    },
+    {
+      "command": ".venv/Scripts/python scripts/environment/offline_tests.py",
+      "exit_code": 0,
+      "result": "61 tests collected; 61 passed, 60 subtests passed in 33.82s on the shared WIP tree at check time; not a release gate"
+    },
+    {
+      "command": ".venv/Scripts/python -m pytest scripts/environment/tests -q",
+      "exit_code": 0,
+      "result": "7 passed in 4.29s after final package-data/provenance change"
+    },
+    {
+      "command": ".venv/Scripts/python -m build --no-isolation",
+      "exit_code": 0,
+      "result": "sdist and wheel built locally from shared WIP; inspected wheel includes WsegBridge.java; not published"
+    },
+    {
+      "command": ".venv/Scripts/python scripts/environment/capture.py --output runs/environment/windows-002/environment.json",
+      "exit_code": 0,
+      "result": "Python/package/CPU/Java/Git provenance saved; worktree dirty, no benchmark commit"
+    },
+    {
+      "command": ".venv/Scripts/python scripts/environment/colab_install.py --evidence-dir runs/environment/colab-local-refused --apply",
+      "exit_code": 2,
+      "result": "Expected refusal before install: not a verified Linux CUDA runtime"
+    },
+    {
+      "command": "java -version; javac -version",
+      "exit_code": 0,
+      "result": "Java/JDK 22.0.2 available locally; no claim of segmentation equivalence"
+    }
+  ],
+  "real_colab_executed": false,
+  "full_training_executed": false,
+  "benchmark_results": null,
+  "wheel_validation": {
+    "path": "dist/neu_esc_reproduction-0.1.0-py3-none-any.whl",
+    "sha256": "f9828136f22070366efea1e5c0a996f4c6c93da4587d2c82da789ce7e9e9d7e8",
+    "java_bridge_included": true,
+    "distribution_published": false
+  },
+  "hashes": {
+    "docs/contracts.md": "d9abd45e16f1fdea1e5a590a459eefab574ab5eef415cccb25565aa8dd134b15",
+    "pyproject.toml": "0dfd4f076389de1159e6169c39014cd0082406e9d51d64de8cca190ee6ce262d",
+    "uv.lock": "9cdf0fa731273f8238ab6cbf88e6efd91418476de428853bd85fb37bb0f2e002",
+    "requirements-cpu.in": "5c24793fdae0101c2b81ac601e3243e9235e863fc6dbe6c8a447f95b518764e3",
+    "requirements-cpu.lock": "a22fa03323af579ad82fcd9979a461698723893138f388b3d8b01d95bd3597d3"
+  },
+  "limitations": [
+    "Shared code changed concurrently; checks are timestamped observations, not downstream module READY declarations",
+    "uv.lock resolution does not verify a CUDA stack",
+    "Colab still requires actual GPU/runtime/Drive output and integration gate",
+    "Fixture manifest is synthetic, incomplete and benchmark-ineligible"
+  ]
+}

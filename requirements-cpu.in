@@ -1,0 +1,13 @@
+# CPU-only wheel URLs audited from the official PyTorch CPU index on 2026-10-11.
+# Supported: CPython 3.10-3.13, x86_64 Windows/Linux (Linux glibc >= 2.28).
+# Explicit URLs isolate PyTorch CPU from unrelated packages on that index.
+setuptools>=68
+wheel
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl#sha256=4ce2a6ae7d302bba56ef7c5c92d9f752728896cfe2626a7f3e5293f879e36650 ; python_version == "3.10" and sys_platform == "linux"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp310-cp310-win_amd64.whl#sha256=bda7043ec45539b1b61538af468e19854b72ac6be8d6fde2f51dfd0c91721568 ; python_version == "3.10" and sys_platform == "win32"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=5e38154c8896d426a5df58bf2276b603e82184dfae4f54d77dbb212f36e34f37 ; python_version == "3.11" and sys_platform == "linux"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp311-cp311-win_amd64.whl#sha256=d14b0c8a66345b7ba43adfa86fc20d89087a0a92e440004755d49d2468ddc6e0 ; python_version == "3.11" and sys_platform == "win32"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f ; python_version == "3.12" and sys_platform == "linux"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-win_amd64.whl#sha256=c52adc3bd526ff7fc5bdcc58fc4a76e6214d09951b646ffe5256ebd7ba60cef1 ; python_version == "3.12" and sys_platform == "win32"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl#sha256=331fa474e26e428e2e6af1143b2fdab19cee492d7d21897b8899ce1c14755662 ; python_version == "3.13" and sys_platform == "linux"
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp313-cp313-win_amd64.whl#sha256=4eec5a4fadd7a18f9c75b97fdb374fbb579ce4b1604bf66eeb14dc2201d54def ; python_version == "3.13" and sys_platform == "win32"

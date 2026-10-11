@@ -1,0 +1,19 @@
+* text=auto
+.gitattributes text eol=lf
+.gitignore text eol=lf
+# Preserve CSV bytes used in source/fixture SHA-256 checks on every platform.
+*.csv -text
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.lock text eol=lf
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.ipynb text eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary
