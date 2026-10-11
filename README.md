@@ -4,6 +4,8 @@ Repo tái lập baseline gốc của [NEU-ESC](https://arxiv.org/abs/2506.23524)
 
 **Chưa có kết quả full training được xác minh.** Windows dùng phát triển, audit và smoke CPU; full training dùng Google Colab GPU sau gate tích hợp. Recipe Colab là PREPARED; chưa xác nhận runtime GPU, quota hoặc Drive. Các module triển khai pipeline đồng thời; các CLI trong hợp đồng là giao diện đích và chỉ được coi là hoạt động khi module chủ bàn giao cùng kiểm tra tích hợp.
 
+Hạ tầng 04 đã cài/import được trên Windows và pass [CI CPU](https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38148094332): 7 tests mỗi job trên Windows/Ubuntu, Python 3.10/3.12. Commit nền tảng chưa chứa implementation WIP của các module khác.
+
 ## Quickstart Windows / Linux CPU
 
 Dùng CPython 3.10–3.13 trên Windows/Linux x86_64 (Linux glibc >=2.28). Bộ CPU khóa riêng giữ PyTorch CPU và không tải CUDA stack. Lệnh PowerShell:

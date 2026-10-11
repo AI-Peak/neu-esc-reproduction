@@ -14,6 +14,8 @@
 
 `gh repo create AI-Peak/neu-esc-reproduction --public --description ...` đã thực thi và URL/visibility kiểm tra lại. Không tạo org mới; không suy tên thành viên từ proposal; không cấp owner hoặc quyền team khác. Không lưu token vào repo/docs/logs. Token scopes đã kiểm tra nhưng quyền cụ thể dùng membership/API, không suy quyền chỉ từ auth.
 
+Infrastructure commit **`573a4b4d0adce02edf4dae9d0c7643c0faa12f45`** đã push lên `origin/main`; GitHub ref API xác nhận cùng SHA. Commit gồm đúng 24 file READY trong `scripts/environment/04-allowlist.txt`. Local clone sạch ở `F:/DPL project/tmp/04-infrastructure-snapshot` đã collect/pass 7 tests bằng package source của chính snapshot (dùng lại CPU dev dependencies). Shared worktree còn module WIP, và commit này chưa chứa implementation pipeline. CI thật: [run 38148094332](https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38148094332) **SUCCESS** trên đủ 4 jobs Windows/Ubuntu × Python 3.10/3.12, 7 tests và pip check pass mỗi job; logs/API đã đọc lại ngày 11/10/2026, Asia/Saigon; timestamp kiểm tra cuối: 2026-10-11T21:45:21.541967+07:00.
+
 ## Snapshot theo allowlist READY
 
 Module 04 sở hữu Git index/commit/remote. Chủ module giao handoff với status READY và danh sách **file cụ thể**, SHA-256/config và checks thật. Status PARTIAL không cấp phép stage toàn namespace; chỉ output có READY rõ ràng mới đủ điều kiện bàn giao. Module 04 kiểm tra file READY chưa đổi từ hash đã bàn giao; thay đổi bất ngờ phải dừng file đó. Không stage dataset/checkpoints/secrets dù file tồn tại.

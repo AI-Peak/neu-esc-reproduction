@@ -112,8 +112,68 @@
   },
   "limitations": [
     "Shared code changed concurrently; checks are timestamped observations, not downstream module READY declarations",
-    "uv.lock resolution does not verify a CUDA stack",
     "Colab still requires actual GPU/runtime/Drive output and integration gate",
-    "Fixture manifest is synthetic, incomplete and benchmark-ineligible"
-  ]
+    "Fixture manifest is synthetic, incomplete and benchmark-ineligible",
+    "uv.lock resolution and successful CPU CI do not verify a Colab CUDA stack",
+    "Python 3.11/3.13 are resolution targets, not directly tested in this handoff"
+  ],
+  "infrastructure_commit": "573a4b4d0adce02edf4dae9d0c7643c0faa12f45",
+  "clean_snapshot_verification": {
+    "path": "F:/DPL project/tmp/04-infrastructure-snapshot",
+    "commit": "573a4b4d0adce02edf4dae9d0c7643c0faa12f45",
+    "package_source": "PYTHONPATH pointing at snapshot/src, external CPU dev environment reused",
+    "git_status": "clean",
+    "collection_count": 7,
+    "passed": 7,
+    "elapsed_seconds": 5.25,
+    "exit_code": 0
+  },
+  "github": {
+    "organization": "https://github.com/AI-Peak",
+    "repository": "https://github.com/AI-Peak/neu-esc-reproduction",
+    "visibility": "PUBLIC",
+    "authenticated_account": "MarcusCyborg",
+    "membership_state": "active",
+    "membership_role": "admin",
+    "invitations_sent": 0,
+    "infrastructure_pushed": true,
+    "ci_first_run": "https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38148094332",
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "ci_jobs": [
+      {
+        "os": "windows-latest",
+        "python": "3.10",
+        "collected": 7,
+        "passed": 7,
+        "pip_check": "passed",
+        "conclusion": "success"
+      },
+      {
+        "os": "windows-latest",
+        "python": "3.12",
+        "collected": 7,
+        "passed": 7,
+        "pip_check": "passed",
+        "conclusion": "success"
+      },
+      {
+        "os": "ubuntu-latest",
+        "python": "3.10",
+        "collected": 7,
+        "passed": 7,
+        "pip_check": "passed",
+        "conclusion": "success"
+      },
+      {
+        "os": "ubuntu-latest",
+        "python": "3.12",
+        "collected": 7,
+        "passed": 7,
+        "pip_check": "passed",
+        "conclusion": "success"
+      }
+    ],
+    "verified_at_local": "2026-10-11T21:45:21.541967+07:00"
+  }
 }

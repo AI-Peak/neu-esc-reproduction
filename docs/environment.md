@@ -10,7 +10,7 @@ Module 04 quản lý packaging và recipe; module 07 quản lý notebook/Drive/q
 |---|---|---|
 | `uv.lock` | Resolution universal có metadata và hashes | Không coi resolver success là GPU verification; không sync toàn bộ lên Colab |
 | `requirements-cpu.in` | Build tooling + URLs CPU wheels lấy từ PyTorch index | CPython 3.10–3.13, Windows/Linux x86_64; Linux glibc >=2.28 |
-| `requirements-cpu.lock` | Pin/hash dependencies CPU; markers theo Python/platform | Đã kiểm tra Windows; Linux là target CI, không nhận đã chạy local Linux |
+| `requirements-cpu.lock` | Pin/hash dependencies CPU; markers theo Python/platform | Windows local 3.10 và CI Windows/Ubuntu 3.10/3.12 đã pass; Colab GPU chưa chạy |
 | `runs/environment/.../environment.json` | Bằng chứng thực tế package/Python/GPU/commit | Ignored, phải sync cùng run metadata |
 | `requirements.verified.txt` trong Colab evidence | Exact pins sau install/import/CUDA probe | Chỉ áp dụng runtime tương thích; không mang sang Windows hoặc GPU stack khác |
 

@@ -38,7 +38,7 @@ Tất cả outputs 04 trong allowlist là **READY infrastructure** để stage/c
 - Packaging/lock hashes và installed versions: `scripts/environment/verification.json`.
 - CPU dev stack thật: CPython 3.10.11, torch 2.14.1+cpu, transformers 4.57.6, numpy 2.2.6, pandas 2.3.3, PyYAML 6.0.3, scikit-learn 1.7.2, matplotlib 3.10.9, pytest 9.1.1, setuptools 84.0.0. Java/JDK 22.0.2 đã kiểm tra local.
 - `uv.lock` là universal resolver lock; CPU lock dùng tám URL/hash wheels thật lấy từ official PyTorch CPU index. Không bịa version paper hoặc dùng CPU lock làm CUDA environment lock.
-- Git commit: infrastructure commit xác định bằng `git log --format='%H %s' -- scripts/environment/04-allowlist.txt`; full training release SHA chưa có. Không tự nhúng SHA của commit chứa chính handoff này vì hash tự tham chiếu.
+- Git commit infrastructure đã push: **`573a4b4d0adce02edf4dae9d0c7643c0faa12f45`**, đúng 24 file 04 allowlist. Handoff này được cập nhật ở commit tài liệu sau đó; full training release SHA chưa có.
 
 ## Commands/checks thực tế
 
@@ -54,6 +54,8 @@ Tất cả outputs 04 trong allowlist là **READY infrastructure** để stage/c
 | Package/dependency imports | `neu_esc`, torch, transformers, yaml, numpy, pandas, sklearn, matplotlib, sentencepiece import được; `torch.cuda.is_available()=false`. |
 | `offline_tests.py` trên shared tree lúc kiểm tra | 61 tests collected; **61 passed + 60 subtests passed**, 33.82s. Code modules khác còn thay đổi, đây không phải release gate. |
 | `pytest scripts/environment/tests -q` sau cập nhật packaging/provenance | **7 passed**, 4.29s. |
+| Clone sạch commit `573a4b4...` với package source của snapshot | **7 collected, 7 passed**, 5.25s; Git status clean. Chỉ xác minh infrastructure, không train pipeline. |
+| GitHub Actions run `38148094332` trên commit `573a4b4...` | **SUCCESS**, đủ 4 jobs Windows/Ubuntu × Python 3.10/3.12; mỗi job 7 collected/7 passed và pip check pass. Logs/API đã đọc lại. |
 | `python -m build --no-isolation` + inspect wheel | sdist/wheel built; `neu_esc/data/WsegBridge.java` có trong wheel. Không upload dist chứa WIP. |
 | capture windows-002 | Lưu package/Python/CPU/Java/Git provenance, không thu thập env secrets. |
 | colab_install trên Windows CPU | Từ chối trước install vì chưa có Linux CUDA verified, không tạo evidence-dir. Không phải Colab test. |
@@ -63,9 +65,9 @@ Lần cài lock đầu gặp hash mismatch ở MarkupSafe do CPU index được 
 
 ## Đã xác minh và chưa xác minh
 
-Đã xác minh packaging editable, local import/collection/CPU tests, build package-data Java bridge, locks resolver/download, ignores, org/account membership, public repo URL và remote. Không thay đổi dataset/proposal/PDF/slide hoặc implementation/test của module khác.
+Đã xác minh packaging editable, local import/collection/CPU tests, build package-data Java bridge, locks resolver/download, ignores, org/account membership, public repo URL/remote/push và CI CPU trên Windows/Ubuntu Python 3.10/3.12. Không thay đổi dataset/proposal/PDF/slide hoặc implementation/test của module khác.
 
-Chưa xác minh Linux/Colab GPU execution, CUDA stack phù hợp model thật, Drive/quota/VRAM, full model/tokenizer revisions, real dataset equivalence hay benchmark. CI workflow đã chuẩn bị; trạng thái execution GitHub cần đọc sau push, không suy success từ YAML. Fixture counts/metrics không được báo như paper reproduction.
+Chưa xác minh Colab GPU execution, CUDA stack phù hợp model thật, Drive/quota/VRAM, full model/tokenizer revisions, real dataset equivalence hay benchmark. Linux CPU đã được GitHub CI thực thi; không suy ra Colab GPU readiness. Fixture counts/metrics không được báo như paper reproduction.
 
 Giả thuyết Figure 3 lệch do order/checkpoint/dataset chưa kiểm chứng; 04 không thêm kết luận nguyên nhân. SMART audit thuộc 02; hai method_mode không được gộp.
 
@@ -75,7 +77,7 @@ Giả thuyết Figure 3 lệch do order/checkpoint/dataset chưa kiểm chứng;
 - `sentencepiece` là tokenizer support dependency, chưa chứng minh checkpoint thật cần/đủ chỉ bằng local import.
 - `llm` group hiện rỗng: chờ SDK/import request module 05; không đồng nghĩa LLM pipeline READY.
 - Native segmentation yêu cầu JDK 11+ và resources khóa của 01; package-data `.java` được thêm theo requirement thấy trong implementation local.
-- CPU lock hỗ trợ CPython 3.10–3.13 Windows/Linux x86_64, Linux glibc >=2.28. Windows 3.10 được test trực tiếp; các target khác chờ CI/runtime thật.
+- CPU lock hỗ trợ CPython 3.10–3.13 Windows/Linux x86_64, Linux glibc >=2.28. Windows 3.10 test local và Windows/Ubuntu 3.10/3.12 test CI; 3.11/3.13 chỉ resolver, chưa chạy tests trực tiếp trong bàn giao này.
 - Không đổi interface contract. Colab preflight lưu ngoài encoder run-dir vì trainer 02 tự tạo run-dir mới và ghi environment.json.
 
 ## GitHub và blockers
