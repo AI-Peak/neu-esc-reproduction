@@ -6,7 +6,7 @@ Local/package Status: READY
 
 Org/repo Status: READY
 
-Release candidate Status: PREPARED — implementation allowlist reviewed; clean checkout and CI verification pending
+Release candidate Status: CPU_AND_CI_VERIFIED — full encoder commit đã push; READY_FOR_MODULE_06_RECHECK
 
 GPU_EXECUTION: PENDING
 
@@ -25,6 +25,7 @@ Handoff 02 mới READY; receipt `reports/method/i06-02-verification.json` hash `
 - `scripts/environment/release-inventory-20261012.json`: 151 READY files của 01/02/03/06, hashes gốc khi owner/receipt có và hashes review 04 cho paths READY chưa có checksum riêng. Hash mismatch được reject; READY paths không đồng nghĩa cho phép ship cache.
 - `scripts/environment/release-allowlist.txt`: file-by-file stage list gồm READY module paths và đúng updates thuộc 04. Không glob/directory hoặc `git add .`.
 - `scripts/environment/review_release.py`: read-only ownership/hash/syntax/metadata/archive/credential review; không stage hoặc sửa source owner.
+- `scripts/environment/verify_release.py`: clean committed checkout → fresh wheel/hash-locked CPU venv → imports/configs/CLI/tests → sáu fresh-process variants và explicit validation aggregation assertions. Chỉ tạo ignored local evidence.
 - `scripts/environment/check_pipeline.py`: imports data/model/loss/training/evaluator thật, 22 full configs, 5 CLI helps, Transformers torch bin-loader compatibility guard; không download model.
 - Packaging/locks: `torch>=2.6`, `Pillow>=10.1`, `pypdf`; CPU lock resolved/installed có hash verification, PyYAML/JDK/Colab constraints giữ đúng phạm vi.
 - CI: module/integration CPU tests + P0 train→interrupt/resume→predict→evaluate→persisted validation aggregation. Runner giữ CPU cases trong file có case-level dataset/GPU marker.
@@ -34,11 +35,34 @@ Handoff 02 mới READY; receipt `reports/method/i06-02-verification.json` hash `
 
 ## Release checks và bàn giao SHA
 
-Chưa ghi SHA trước khi commit vì không dùng hash tự tham chiếu. Phần này sẽ được cập nhật sau clone sạch/install/CLI/CPU pipeline/CI, chỉ trên đúng committed execution bytes. `reports/integration/gates.json/input_snapshot.json` và handoff 06 trong release là audit cũ trước fix, không được trình bày như release gate mới.
+**Tested/pushed encoder SHA: `caaa76228bde261fd33bba15e0c742d77967fdb2`**. Public origin: https://github.com/AI-Peak/neu-esc-reproduction. Commit này có implementation/configs/manifests/tests/integration scripts; 168 paths đã stage file-by-file, 151 owner READY hashes match, 17 tokenizer caches excluded. `.gitattributes` có ngoại lệ whitespace hẹp cho exact upstream copies/CRLF reports và blank EOF evaluator init; không thay bytes của owner.
+
+Clean detached clone: `F:/DPL project/tmp/04-encoder-release-caaa762`. Lệnh thực chạy từ clone:
+
+```powershell
+& 'F:/DPL project/neu-esc-reproduction/.venv/Scripts/python.exe' scripts/environment/verify_release.py --output runs/environment/release-04-001
+```
+
+Verifier build wheel từ committed clone, tạo venv mới, cài CPU lock với hashes, cài wheel (không editable), bỏ inherited PYTHONPATH/PYTHONHOME và xác nhận imports tới site-packages của venv. Wheel gồm embedded Java bridge và mọi namespace pipeline. pip check PASS; 10 imports/22 configs/5 CLI helps/torch bin-loader guard PASS. **88 CPU tests + 85 subtests PASS; 9 GPU/dataset cases deselected**. Sáu variants ST sentiment/ST topic/MTL/MTL+SMART/MTL+MLM/MTL+MLM+SMART: 28 fresh-process CLI checks PASS, validation metadata/aggregation PASS cả sáu; P0 interrupt/resume và negative rejects PASS. Checkout vẫn sạch sau chạy. Chỉ tiny initialized BERT + synthetic data, không pretrained/full training hoặc benchmark.
+
+Local receipt/logs/wheel/venv/predictions/checkpoints giữ trong ignored `runs/environment/release-04-001` của clone. `scripts/environment/release-verification-20261012.json` là summary packaging/check status/hash, không chứa smoke artifacts hoặc logs. Nó lưu SHA-256 của 93 execution/config/manifest/test/fixture/lock/workflow files để kiểm docs-only follow-up không thay bytes đã test. Historical release allowlist giữ nguyên ứng với tested commit; evidence follow-up dùng allowlist riêng.
+
+CI thật của tested SHA: [run 38214475551](https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38214475551) **SUCCESS đủ bốn jobs Windows/Ubuntu × Python 3.10/3.12**. Đã đọc từng job logs: mỗi job **88 tests + 85 subtests PASS, 9 deselected**, implementation/config/CLI PASS, fresh-process P0 PASS, persisted validation metadata/aggregation PASS và pip check PASS. GitHub tree API xác nhận cả 180 blobs match local tested commit. Logs CI chỉ local ignored; summary lưu status/URLs/checks/hashes. Bản docs/evidence tiếp theo stage đúng bốn paths ở `release-evidence-allowlist.txt`; 93 execution/config/manifest/test/fixture/lock/workflow bytes khớp clean tested SHA, không đổi source owner. Docs-only commit bỏ CI lặp lại bằng `[skip ci]`; CI chứng minh luôn gắn với tested SHA ở trên.
+
+Colab dùng SHA cố định:
+
+```bash
+git clone https://github.com/AI-Peak/neu-esc-reproduction.git /content/neu-esc-reproduction
+cd /content/neu-esc-reproduction
+git checkout --detach caaa76228bde261fd33bba15e0c742d77967fdb2
+git rev-parse HEAD
+```
+
+Module 06 kiểm lại gates trên SHA này; module 07 kiểm runtime GPU thật theo recipe môi trường trước full training. `reports/integration/gates.json/input_snapshot.json` và handoff 06 trong release là audit cũ trước fix, không phải release certification mới.
 
 ## Blockers / inputs tiếp theo
 
-- I06-01: đang tạo full encoder commit đủ implementation/config/manifests/tests/integration từ READY allowlist.
+- I06-01: CLOSED trong phạm vi 04 — commit đầy đủ đã push và kiểm clean wheel/CPU; chờ 06 xác nhận gate trên SHA cụ thể.
 - Colab GPU/JDK/Drive/quota/VRAM/pretrained bin load/P0 backward/resume/sync: **PENDING**, không được suy ra từ CPU guard/fixtures. 07 cung cấp runtime output; 06 review gates thật trước full training.
 - Dataset manifest digest `ea127f55e840991e53569379a9b3e8ac00bc6798108d6472f8ab300a109f8f7d`: pinned GitHub alternative revision, chưa chứng minh exact HF/paper equivalence. Không thay manifests/22 configs để che giới hạn.
 - Không chờ LLM, không full train, không tạo/nhắn chat/subagent, không sửa gates của 06.

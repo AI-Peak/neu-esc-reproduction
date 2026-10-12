@@ -1,5 +1,15 @@
 # GitHub và snapshot
 
+## Encoder release candidate — 12/10/2026
+
+Public tested SHA: **`caaa76228bde261fd33bba15e0c742d77967fdb2`** ([commit](https://github.com/AI-Peak/neu-esc-reproduction/commit/caaa76228bde261fd33bba15e0c742d77967fdb2)). Đã push origin/main, gồm đầy đủ READY data/model/loss/training/evaluation/configs/manifests/tests/integration. Không ship data/resources/tokenizer caches/weights/checkpoints/secrets/runs hoặc WIP.
+
+Clean detached clone đã cài wheel vào venv mới với hash-locked CPU dependencies: imports/22 configs/5 CLI, pip check, 88 tests + 85 subtests và sáu CPU fixture variants/validation aggregation PASS. GPU PENDING, formal 06 recheck PENDING, LLM OUT_OF_SCOPE; benchmark actual 0. CI [38214475551](https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38214475551) **SUCCESS đủ bốn jobs Windows/Ubuntu × Python 3.10/3.12**; đã đọc logs mỗi job: 88 tests/85 subtests PASS, P0 và validation metadata PASS, pip check PASS. GitHub published tree có 180 blobs match tested commit. Handoff 04 và release verification summary ghi bằng chứng cụ thể.
+
+Colab checkout full SHA trên, sau đó dùng `docs/environment.md`; không checkout infrastructure SHA cũ. Docs/evidence follow-up không thay 93 execution/config/manifest/test/fixture/lock/workflow bytes đã test. Chi tiết ở `handoffs/04-infrastructure.md`, allowlists và `scripts/environment/release-verification-20261012.json`.
+
+## Historical infrastructure setup — 11/10/2026
+
 Đã kiểm tra ngày **11/10/2026, Asia/Saigon** bằng read-only `gh auth status`, `gh api user`, `gh api orgs/AI-Peak`, `gh api user/memberships/orgs/AI-Peak` và `gh repo view`.
 
 | Mục | Trạng thái thực tế |
