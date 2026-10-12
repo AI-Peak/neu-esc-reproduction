@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "pdf_sha256": "bdc37ae84e6653ca60b325ccb54f7f655fb4cd1ee606d0f9a8a5a15772e7189c",
+    "page": 19,
+    "figure": "Figure 3",
+    "render": "source-page-19.png"
+  },
+  "visual_verification_date": "2026-10-11",
+  "verified_transcription_sha256": {
+    "figure3_sentiment_counts.csv": "bdafeb03a5d4ab5271bdbf785a8874cd519507652900d0e84c99eac3b72a51f5",
+    "figure3_topic_counts.csv": "0b9c76ff7817504efc7787b62b16e5b03d42b16389ae70e57b0af5f40e25a23f"
+  },
+  "verified_cells": {"sentiment": 16, "topic": 100},
+  "unverified_cells": [],
+  "orientation": "rows=true, columns=predicted",
+  "note": "The adjacent Academic/Other cells 980 and 1322 were inspected as separate cells on the rendered original. Values are transcribed, never adjusted to match totals."
+}

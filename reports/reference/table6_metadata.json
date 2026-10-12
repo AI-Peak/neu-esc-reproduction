@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "pdf": "references/NEU-ESC-2506.23524.pdf",
+    "url": "https://arxiv.org/abs/2506.23524",
+    "sha256": "bdc37ae84e6653ca60b325ccb54f7f655fb4cd1ee606d0f9a8a5a15772e7189c",
+    "page": 18,
+    "page_numbering": "1-based PDF page",
+    "table": "Table 6",
+    "readme_values_used": false
+  },
+  "visual_verification": {
+    "date": "2026-10-11",
+    "render": "source-page-18.png",
+    "all_126_numeric_cells_verified": true,
+    "unverified_cells": []
+  },
+  "alias_to_paper_model": {
+    "mbert": "BERT_base",
+    "velectra": "vELECTRA",
+    "xlm_r": "XLM_R_base",
+    "visobert": "VisoBERT",
+    "phobert": "phoBERT_base-v2",
+    "gpt4o": "GPT 4o",
+    "claude4": "Claude 4"
+  },
+  "alias_notes": [
+    "mbert is the planning alias; Table 6 itself says BERT_base. No checkpoint or uncased/cased revision is inferred here.",
+    "claude4 preserves the table's Claude 4 label. This does not establish an API snapshot or Sonnet version.",
+    "single_task_pair means two separate runs, st_sentiment and st_topic; it is not a training variant.",
+    "Bold and star markings below are observed typography, not recalculated maxima or statistical significance."
+  ],
+  "metric_column_order": [
+    "sentiment_accuracy_pct", "sentiment_macro_f1_pct", "sentiment_weighted_f1_pct",
+    "topic_accuracy_pct", "topic_macro_f1_pct", "topic_weighted_f1_pct"
+  ],
+  "paper_emphasis_by_row": {
+    "04": {"bold_columns": [0, 2], "star_columns": []},
+    "05": {"bold_columns": [1, 3, 4, 5], "star_columns": [1]},
+    "08": {"bold_columns": [0, 1, 2, 3, 4, 5], "star_columns": []},
+    "10": {"bold_columns": [0, 2, 3, 4, 5], "star_columns": [2, 3, 4, 5]},
+    "11": {"bold_columns": [1], "star_columns": []},
+    "12": {"bold_columns": [2], "star_columns": []},
+    "13": {"bold_columns": [5], "star_columns": []},
+    "14": {"bold_columns": [0, 1, 3, 4], "star_columns": []},
+    "17": {"bold_columns": [0, 1, 2, 3, 4, 5], "star_columns": [0]},
+    "21": {"bold_columns": [0, 1, 2, 3, 4, 5], "star_columns": []}
+  }
+}

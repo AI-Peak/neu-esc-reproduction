@@ -1,0 +1,163 @@
+{
+  "audited_date": "2026-10-11",
+  "dataset_redistribution_authorized": false,
+  "evidence_sha256": {
+    "github_tree.json": "105fb517f7ab653d01388612c4792b1fcd7455871e76c303084d00029f980d30",
+    "hf_README.md": "50305717b3b475bb808d212b96807d14d21cd4549ff37504f3ee6a5a1c429717",
+    "hf_access.json": "f467fd3c93c5d1157b95c3a8c4ea50a20e68b166fec48d0c293a0eabe25f4b63",
+    "hf_csv_access.json": "1193df01ceaebb4529bad1ed860bf18faaf4837d7e8ede2c159bf8c3f789bc21",
+    "hf_dataset.json": "716673f458d315c47c7b0d531aee5fa4b4347dbc0ad23770bf6e4a5b49fed554",
+    "phobert_readme.md": "e7d289d46e437fac348b696562e3a3c3031acaa499b3ffceb111546464d27f5a",
+    "raw_processed_alignment.json": "b1478ef2ce6c0244568410f483a828055d5ef9c6a332ed8dc469b9b698f95f53"
+  },
+  "facts": {
+    "pdf_pages": 24,
+    "raw_utf8_strict": true,
+    "sentiment_labels": {
+      "0": "Neutral",
+      "1": "Positive",
+      "2": "Negative",
+      "3": "Toxic"
+    },
+    "source_split_counts": {
+      "test": 6613,
+      "train": 23048,
+      "validation": 3305
+    },
+    "topic_labels": {
+      "0": "Spam",
+      "1": "News",
+      "2": "Academic",
+      "3": "Other",
+      "4": "Service",
+      "5": "Jobs & Recruitment",
+      "6": "Personal Affairs",
+      "7": "Social Affairs",
+      "8": "Help & Share",
+      "9": "Club & Events"
+    }
+  },
+  "github": {
+    "commit_date": "2024-07-18T04:37:24Z",
+    "license": "No license file in pinned recursive tree; README has no distribution grant",
+    "raw_and_processed_csv_sources": [
+      {
+        "path": "data/raw/github/dataset/train_set.csv",
+        "role": "unsegmented_curated_source",
+        "rows": 23048,
+        "sha256": "8a18a73ca21105e0b424829cc41395719be98dd7f01bf3d962eca86e7a1501ec",
+        "split": "train",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set.csv"
+      },
+      {
+        "path": "data/raw/github/dataset/val_set.csv",
+        "role": "unsegmented_curated_source",
+        "rows": 3305,
+        "sha256": "0b2567fe5374cf9b8d22de92ce71d3f9bfa036dffac46fa6f7a5650e85c81169",
+        "split": "validation",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set.csv"
+      },
+      {
+        "path": "data/raw/github/dataset/test_set.csv",
+        "role": "unsegmented_curated_source",
+        "rows": 6613,
+        "sha256": "cdd81b2c7b96752f9f45d05e231682fcd6c380f40273dac521425ceff71ab312",
+        "split": "test",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set.csv"
+      },
+      {
+        "path": "data/raw/github/dataset/train_set_processed.csv",
+        "role": "author_presegmented_comparison_only",
+        "rows": 23048,
+        "sha256": "7ca23b39e8e917de5c81745b0be2f4bb0e085fdc6173882479ecb2ed8e9ebe96",
+        "split": "train",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set_processed.csv"
+      },
+      {
+        "path": "data/raw/github/dataset/val_set_processed.csv",
+        "role": "author_presegmented_comparison_only",
+        "rows": 3305,
+        "sha256": "948578e4b92df56117fd38d8edaee8d98f11adbd38611d6faee655008adea626",
+        "split": "validation",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set_processed.csv"
+      },
+      {
+        "path": "data/raw/github/dataset/test_set_processed.csv",
+        "role": "author_presegmented_comparison_only",
+        "rows": 6613,
+        "sha256": "bf850a67db6f9dd48df2adc5aa181e63e052e526361a1e9f0e6179bf582dc2e4",
+        "split": "test",
+        "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set_processed.csv"
+      }
+    ],
+    "readme_results_are_paper_targets": false,
+    "revision": "b5637cc0a8a7b5e88e794d180c11902405548eb5",
+    "tree_evidence": "reports/source/github_tree.json",
+    "url": "https://github.com/hung20gg/multi-task-bert"
+  },
+  "huggingface": {
+    "content_equivalence": "unverified",
+    "csv_http_status": 401,
+    "gated": "auto",
+    "id": "hung20gg/NEU-ESC",
+    "metadata_license": "apache-2.0",
+    "observed_revision": "daf543ad1992153cd2be9fec3cb59aa0fc714147",
+    "readme_http_status": 200,
+    "url": "https://huggingface.co/datasets/hung20gg/NEU-ESC"
+  },
+  "limitations": [
+    "Same split counts, class marginals and README descriptions do not prove sample/text equality with paper or gated HF revision.",
+    "Original acronym dictionary and cleaning/word-segmentation tool version not published in pinned repository.",
+    "Chosen segmentation is a declared alternative, differs from author processed CSV."
+  ],
+  "paper": {
+    "local_pdf_sha256": "bdc37ae84e6653ca60b325ccb54f7f655fb4cd1ee606d0f9a8a5a15772e7189c",
+    "note": "Local PDF locked by bytes; current arXiv download has not been compared",
+    "page_numbering": "1-based PDF pages",
+    "url": "https://arxiv.org/abs/2506.23524"
+  },
+  "phobert_segmentation_rationale": {
+    "revision": "7b4a3e38cd316c14d4006fe0328d3e2d6f1edada",
+    "sha256": "e7d289d46e437fac348b696562e3a3c3031acaa499b3ffceb111546464d27f5a",
+    "url": "https://raw.githubusercontent.com/VinAIResearch/PhoBERT/7b4a3e38cd316c14d4006fe0328d3e2d6f1edada/README.md",
+    "use": "Current upstream rationale for chosen word segmenter; does not establish original NEU-ESC preprocessing"
+  },
+  "prepared_manifest_digest": "ea127f55e840991e53569379a9b3e8ac00bc6798108d6472f8ab300a109f8f7d",
+  "schema_version": 1,
+  "segmenter": {
+    "directory": "data/resources/vncorenlp",
+    "files": {
+      "LICENSE.md": {
+        "bytes": 692,
+        "sha256": "7abc1ba67c44c6fd1928cd15fdfb42ebffc0714c3bc8e3f0ca6fb5bf287768e0",
+        "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/LICENSE.md"
+      },
+      "Readme.md": {
+        "bytes": 7642,
+        "sha256": "278cfad7710be71410d15c79dc9d1ce848c6165b558fa0eaa7d666e50803e586",
+        "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/Readme.md"
+      },
+      "VnCoreNLP-1.2.jar": {
+        "bytes": 27412703,
+        "sha256": "9e2811cdbc2ddfc71d04be5dc36e185c88dcd1ad4d5d69e4ff2e1369dccf7793",
+        "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/VnCoreNLP-1.2.jar"
+      },
+      "models/wordsegmenter/vi-vocab": {
+        "bytes": 526544,
+        "sha256": "0a47c5b55bbce163029d37730a67b9479740388695c29c106c112b815613eaa5",
+        "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/models/wordsegmenter/vi-vocab"
+      },
+      "models/wordsegmenter/wordsegmenter.rdr": {
+        "bytes": 128508,
+        "sha256": "9e62f96bd93e37a24f364238e8d8ae986fa5dad6dbc9f4eae622ab3651b7fa06",
+        "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/models/wordsegmenter/wordsegmenter.rdr"
+      }
+    },
+    "license": "GPL-3.0-or-later",
+    "revision": "62bbc58fe5d113c898eae112656be97dcf50b3a0",
+    "schema_version": 1,
+    "tool": "VnCoreNLP",
+    "version": "1.2"
+  },
+  "timezone": "Asia/Saigon"
+}

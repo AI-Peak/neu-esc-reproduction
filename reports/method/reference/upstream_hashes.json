@@ -1,0 +1,16 @@
+{
+  "commit": "b5637cc0a8a7b5e88e794d180c11902405548eb5",
+  "source_sha256": {
+    "architecture/bert2head/model.py": "00b50edfe0af3dd2a0ed4c76b322419ac5803f00b6099c4a69d013efafca65ff",
+    "architecture/bert2head_mlm/model.py": "1d20eaadc46bb822f015f0ebd8f0655ced7de4c642286c36007a0148b309e40a",
+    "architecture/bert3head_mlm/model.py": "6af5dfd828d6b93ff4456a36f7fbf6bfd90c9b5ea2746c1540706eedecdb5b19",
+    "trainer/base_trainer.py": "0947785a33b69251633d0026ecbc6cf20ecd9163041027361981f2377e71549a",
+    "Trainer/head_trainer.py": "acfb3263e46293069ad024e6635cb309c93892031b04ac99e33d9665b55562e7",
+    "Trainer/mlm_2head_trainer.py": "cef60e98f6b5aeb03c97f86bcdce6178a9f67a5138f0a1d6445c892b17111d96",
+    "Trainer/mlm_3head_trainer.py": "73f4d3ef4bc37469ca214ac70305627e542376a3997e41235c6d892a82e66af3",
+    "utils/dataloader.py": "033df8846dfa2a684f6117f255618d2588fd304d24e6232c39df05548ee042e2",
+    "utils/loss_function.py": "d13004c8224071819fc3acb3394664c0b33ecd1a1df3ebc09595aa3a5d79db7f"
+  },
+  "archive": "reports/method/reference-source.zip",
+  "python_copies": "LF normalized for portable Git checkout"
+}

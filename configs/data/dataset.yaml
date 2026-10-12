@@ -1,0 +1,96 @@
+schema_version: 1
+project_root: ../..
+manifest_path: data/manifests/dataset.json
+audit_directory: reports/source
+source_provider: github:hung20gg/multi-task-bert
+source_revision: b5637cc0a8a7b5e88e794d180c11902405548eb5
+source_license: no license file in pinned GitHub tree; HF metadata declares Apache-2.0
+  for gated HF dataset only
+redistribution_status: not_authorized_for_github_copy
+hf_equivalence_status: HF-unverified:gated_auto; unauthenticated pinned CSV HTTP 401
+label_maps:
+  sentiment:
+    '0': Neutral
+    '1': Positive
+    '2': Negative
+    '3': Toxic
+  topic:
+    '0': Spam
+    '1': News
+    '2': Academic
+    '3': Other
+    '4': Service
+    '5': Jobs & Recruitment
+    '6': Personal Affairs
+    '7': Social Affairs
+    '8': Help & Share
+    '9': Club & Events
+preprocessing:
+  version: neu-esc-data-v1.0.0
+  cleaning: identity
+  segmentation:
+    backend: vncorenlp
+    resources_lock: configs/data/segmentation.lock.json
+sources:
+  train:
+    path: data/raw/github/dataset/train_set.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set.csv
+    sha256: 8a18a73ca21105e0b424829cc41395719be98dd7f01bf3d962eca86e7a1501ec
+    rows: 23048
+  validation:
+    path: data/raw/github/dataset/val_set.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set.csv
+    sha256: 0b2567fe5374cf9b8d22de92ce71d3f9bfa036dffac46fa6f7a5650e85c81169
+    rows: 3305
+  test:
+    path: data/raw/github/dataset/test_set.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set.csv
+    sha256: cdd81b2c7b96752f9f45d05e231682fcd6c380f40273dac521425ceff71ab312
+    rows: 6613
+author_processed_sources:
+  train:
+    path: data/raw/github/dataset/train_set_processed.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set_processed.csv
+    sha256: 7ca23b39e8e917de5c81745b0be2f4bb0e085fdc6173882479ecb2ed8e9ebe96
+    rows: 23048
+  validation:
+    path: data/raw/github/dataset/val_set_processed.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set_processed.csv
+    sha256: 948578e4b92df56117fd38d8edaee8d98f11adbd38611d6faee655008adea626
+    rows: 3305
+  test:
+    path: data/raw/github/dataset/test_set_processed.csv
+    url: https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set_processed.csv
+    sha256: bf850a67db6f9dd48df2adc5aa181e63e052e526361a1e9f0e6179bf582dc2e4
+    rows: 6613
+assumptions:
+- GitHub CSV is an alternative pinned revision; equal row counts do not prove HF/paper
+  equivalence.
+- Source unsegmented CSV is already curated/lowercased; keep its exact text, with
+  no repeated cleaning, stopword removal, acronym expansion, Unicode normalization
+  or deduplication.
+- VnCoreNLP/RDRSegmenter 1.2 is chosen from PhoBERT upstream guidance, not a tool
+  version specified by the NEU-ESC paper.
+- VnCoreNLP sentence outputs are joined with a single space within the original sample;
+  labels, rows, IDs and splits are unchanged.
+- Original acronym dictionary and cleaning/segmentation script/version are not published
+  in the pinned source; our segmented text is an explicit alternative, compared against
+  author CSV.
+- Integral numeric CSV label values such as 0.0 map exactly to IDs 0-3 and 0-9 as
+  defined by paper Tables 1-2; null, nonintegral and out-of-range labels fail.
+- No authorization to redistribute the GitHub dataset has been established; download
+  caches/JSONL/resources stay local and excluded from Git.
+paper_source:
+  url: https://arxiv.org/abs/2506.23524
+  local_pdf_sha256: bdc37ae84e6653ca60b325ccb54f7f655fb4cd1ee606d0f9a8a5a15772e7189c
+  page_numbering: 1-based PDF pages
+  note: Local PDF locked by bytes; current arXiv download has not been compared
+hf_source:
+  id: hung20gg/NEU-ESC
+  url: https://huggingface.co/datasets/hung20gg/NEU-ESC
+  observed_revision: daf543ad1992153cd2be9fec3cb59aa0fc714147
+  gated: auto
+  metadata_license: apache-2.0
+  readme_http_status: 200
+  csv_http_status: 401
+  content_equivalence: unverified

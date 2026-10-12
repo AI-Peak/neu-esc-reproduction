@@ -1,0 +1,8 @@
+# Local full-text/source caches are not release deliverables.
+paper_text.txt
+github_commit.json
+phobert_readme.md
+hf_README.md
+vncorenlp_revision.json
+vncorenlp_tree.json
+py_vncorenlp_pypi.json

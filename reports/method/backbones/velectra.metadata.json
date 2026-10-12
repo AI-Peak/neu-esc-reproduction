@@ -1,0 +1,51 @@
+{
+  "_id": "621ffdc036468d709f17546a",
+  "id": "FPTAI/velectra-base-discriminator-cased",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "electra",
+    "pretraining",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 403,
+  "likes": 0,
+  "modelId": "FPTAI/velectra-base-discriminator-cased",
+  "author": "FPTAI",
+  "sha": "f594fee501933d92d8c13285c969495681d0cc00",
+  "lastModified": "2020-09-30T03:52:16.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "[MASK]",
+  "config": {
+    "architectures": [
+      "ElectraForPreTraining"
+    ],
+    "model_type": "electra"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForPreTraining",
+    "pipeline_tag": "pretraining",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": "config.json"
+    },
+    {
+      "rfilename": "pytorch_model.bin"
+    },
+    {
+      "rfilename": "vocab.txt"
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2022-03-02T23:29:04.000Z",
+  "usedStorage": 885549836
+}

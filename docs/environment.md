@@ -4,7 +4,7 @@ Module 04 quản lý packaging và recipe; module 07 quản lý notebook/Drive/q
 
 ## Dependencies và locks
 
-`pyproject.toml` có extras và dependency groups `data/train/eval/llm/dev`; base import `neu_esc` dùng stdlib. Audit imports ở code tham khảo commit `b5637cc0a8a7b5e88e794d180c11902405548eb5` thấy `torch`, `transformers`, `numpy`, `pandas`, `sklearn`, `tqdm`, `wandb`; hashes và imports được lưu ở `scripts/environment/dependency-audit.json`. Implementation local dùng `PyYAML` cho config và `matplotlib` cho ảnh metrics. Không tự kéo `wandb` vì implementation chưa yêu cầu tracking dịch vụ; module 05 phải bàn giao imports/dependencies trước khi bổ sung SDK vào `llm`. `transformers<5` là giả định tương thích API 4.x, không phải version paper công bố. Tokenizer `sentencepiece` phục vụ tokenizers dự kiến; verify checkpoint/tokenizer thật thuộc 01/02.
+`pyproject.toml` có extras và dependency groups `data/train/eval/llm/dev`; base import `neu_esc` dùng stdlib. Audit imports ở code tham khảo commit `b5637cc0a8a7b5e88e794d180c11902405548eb5` thấy `torch`, `transformers`, `numpy`, `pandas`, `sklearn`, `tqdm`, `wandb`; hashes và imports được lưu ở `scripts/environment/dependency-audit.json`. Implementation dùng PyYAML cho config, **Pillow>=10.1** trực tiếp cho renderer, pypdf cho source audit; không cần wandb. `transformers<5` là compatibility bound, không phải version paper. `torch>=2.6` bảo đảm compatibility guard của Transformers cho pinned ViSoBERT `pytorch_model.bin` không chặn load; CPU guard pass chưa chứng minh tải/full pretrained backward. `sentencepiece` phục vụ tokenizer theo revisions 02. LLM OUT_OF_SCOPE theo user ngày 12/10/2026; group rỗng giữ tương thích tên contract và không chặn encoder release.
 
 | File | Mục đích | Giới hạn |
 |---|---|---|
@@ -23,7 +23,7 @@ python scripts/environment/lock_cpu.py
 
 Script resolve metadata CPU từ registry, rồi emit đúng URLs/hash đã audit của tám wheels Windows/Linux; tránh phải tải cả tám wheels chỉ để đọc metadata. Không tự upgrade `torch` pin/URLs; xác minh releases và wheels thật, kiểm tra CPU fixtures rồi cập nhật audit/handoff. Các lựa chọn phiên bản ảnh hưởng kết quả full run phải đổi cohort.
 
-Implementation data 01 dùng VnCoreNLP/RDRSegmenter qua Java source launcher: cần **JDK 11+**, bridge `.java` phải đi trong wheel (package-data đã cấu hình). Không cần Python VnCoreNLP wrapper nếu imports không yêu cầu. Module 01 khóa jars/models/resources và xác minh preprocessing; capture ghi version Java nếu có, không tự cài JDK/resources hay suy segmentation tương đương paper.
+Implementation data 01 dùng VnCoreNLP/RDRSegmenter qua Java source launcher: cần **JDK 11+**, bridge được embed trong `neu_esc.data._java_bridge` và tự đi trong wheel. Không cần Python VnCoreNLP wrapper hoặc `.java` package-data riêng. Module 01 khóa jars/models/resources và xác minh preprocessing; capture ghi version Java nếu có. Colab phải xác minh JDK và tải resources bằng CLI pinned trước prepare; cache tài nguyên/tokenizer không nằm trong release Git.
 
 ## Windows development và CPU offline checks
 
@@ -32,11 +32,12 @@ py -3.10 -m venv .venv
 .venv/Scripts/python -m pip install --require-hashes -r requirements-cpu.lock
 .venv/Scripts/python -m pip install --no-deps --no-build-isolation -e .
 .venv/Scripts/python -m pip check
+.venv/Scripts/python scripts/environment/check_pipeline.py
 .venv/Scripts/python scripts/environment/offline_tests.py
 .venv/Scripts/python scripts/environment/capture.py --output runs/environment/windows-001/environment.json
 ```
 
-Linux dùng `.venv/bin/python`. Nhóm test có đánh dấu `gpu/network/paid_api/dataset` bị bỏ trước import bởi runner; fixtures CPU còn lại được collect và chạy. Chủ module phải giữ import/conftest không có network, training hoặc API side effects, và đánh dấu test cần tài nguyên ngoài. CPU tests dùng fixtures synthetic, không đại diện benchmark. Các fixture/manifest ví dụ tại `scripts/environment/fixtures/` chỉ minh họa; module 01 sở hữu manifest thật, quyền download và equivalence audit. Không có script download tự động vượt quyền dữ liệu.
+Linux dùng `.venv/bin/python`. Module-level pytestmark `gpu/network/paid_api/dataset` bị bỏ trước import; case-level markers được pytest deselect để giữ các CPU cases chung file. Chủ module phải giữ import/conftest không có network/training/API side effects. CI chạy module/integration tests và fresh-process P0 CLI pipeline bằng tiny initialized BERT/synthetic inputs; không thay thế pretrained GPU smoke hay benchmark. Fixture/manifest ví dụ ở `scripts/environment/fixtures/` chỉ minh họa; 01 sở hữu manifest thật và download/equivalence audit.
 
 ## Recipe cung cấp cho notebook 07 — PREPARED
 
@@ -66,7 +67,7 @@ git rev-parse HEAD
 git status --porcelain --untracked-files=all
 ```
 
-Commit chỉ có nền tảng 04 chưa phải release train. Không dùng alias `main`, editable từ cây shared đang thay đổi, hoặc snapshot thiếu implementation. Nếu repo đã tồn tại, kiểm tra URL/commit trước; không xóa/reset cây chưa rõ nguồn. Repo private nếu thay visibility sau này: người dùng quản lý Secrets/auth, không chèn token vào URL hay output.
+Các commit `573a4b4`/`1bac0e9` cũ chỉ infrastructure; dùng release encoder SHA mới trong handoff 04 sau CPU/CI checks và review 06. Không dùng alias `main`, cây shared đang thay đổi hoặc snapshot thiếu implementation. Nếu repo đã tồn tại, kiểm tra URL/commit trước; không xóa/reset cây chưa rõ nguồn. Repo private nếu thay visibility sau này: người dùng quản lý Secrets/auth, không chèn token vào URL hay output.
 
 3. Python cần nằm trong 3.10–3.13. Dùng chính interpreter GPU hiện có, không tạo virtualenv khiến mất torch GPU. `setuptools>=68` cần có cho `--no-build-isolation`; nếu thiếu, cài build tooling rồi kiểm tra lại. Capture và lập kế hoạch cài:
 
@@ -82,7 +83,7 @@ Script ghi pins mọi package torch/torchvision/torchaudio/triton/nvidia-* đang
 python scripts/environment/colab_install.py --evidence-dir runs/environment/colab-install --apply
 ```
 
-Script chạy `pip check`, probes imports và CUDA tensor trong process mới, rồi ghi exact package pins và environment before/after. Nó **không** xác minh accuracy/model/tokenizer/dataset. Nếu runtime vốn có package conflicts, báo blocker và review tương thích; không che lỗi pip check. Nếu package bị thay khi đã import vào notebook, chọn **Runtime → Restart session**, chạy lại import/preflight bằng evidence path mới. Restart disconnects kernel; mount Drive/variables/secrets cần thiết lập lại theo notebook. Thay torch/CUDA cố ý chỉ sau kế hoạch tương thích và restart bắt buộc, không nằm trong recipe tự động này.
+Script chạy `pip check`, probes imports/CUDA tensor trong process mới và `check_pipeline.py` (modules, 22 configs, CLI giúp và torch bin-loader guard), rồi ghi exact package pins và environment before/after. Nó chưa tải pretrained ViSoBERT weights hoặc kiểm accuracy/data equivalence. Nếu runtime torch<2.6, constraints sẽ làm resolver từ chối; giữ GPU stack và bàn giao version/output để review, không âm thầm thay CUDA. Nếu package bị thay khi đã import vào notebook, chọn **Runtime → Restart session**, chạy lại preflight bằng evidence path mới. Secrets/Drive/variables cần thiết lập lại sau restart. 07 vẫn phải chạy pretrained P0 GPU smoke/resume/Drive safeguards thật trước full train.
 
 4. Trước full run, chạy CPU fixtures offline và smoke GPU được 06/02 chỉ định trên commit đó. Người dùng mount Drive; 07 kiểm tra quyền/dung lượng, throughput, copy best/latest và metadata với checksum/completion marker. Chạy capture cho mỗi run:
 
@@ -92,6 +93,6 @@ python scripts/environment/capture.py --output runs/environment/<RUN_ID>/preflig
 python -m neu_esc.training.train --config configs/experiments/visobert/mtl_smart.yaml --seed 42 --run-dir runs/encoder/<RUN_ID>
 ```
 
-Đây là lệnh đích contract, chưa khẳng định trainer đã pass integration. Trainer 02 tạo run-dir mới và tự ghi `environment.json`; preflight nằm ngoài run-dir để không ghi đè hoặc làm trainer từ chối thư mục đã tồn tại. Module 02 vẫn phải log seeds/RNG/deterministic flags thực dùng trong process training, vì preflight process không chứng minh các flags trong trainer. CUDA capture trước/sau không thay thế config/provenance/manifest/checkpoint/selection.
+CPU pipeline được kiểm trên release checkout sạch; chưa chứng minh Colab GPU readiness. Trainer 02 tạo run-dir mới và tự ghi `environment.json`; preflight nằm ngoài run-dir để không gây overwrite hoặc thư mục đã tồn tại. Trainer ghi seeds/RNG/deterministic flags thực dùng; preflight process không thay thế các flags/config/provenance/manifest/checkpoint/selection của run.
 
 Sau verify, sync evidence/locks cùng mỗi run về Drive. Trên runtime mới, capture stack trước; chỉ dùng pins cũ khi Python/platform/GPU stack tương thích. Dataset/model/tokenizer revisions, implementation commit và dependency changes phải được khóa trong cohort.

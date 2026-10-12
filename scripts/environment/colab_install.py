@@ -13,7 +13,7 @@ import sys
 from capture import ROOT, collect
 
 GPU_STACK = ("torch", "torchvision", "torchaudio", "triton")
-IMPORTS = ("numpy", "pandas", "yaml", "torch", "transformers", "sentencepiece", "sklearn", "matplotlib", "tqdm")
+IMPORTS = ("numpy", "pandas", "yaml", "torch", "transformers", "sentencepiece", "sklearn", "matplotlib", "PIL", "pypdf", "tqdm")
 
 
 def main() -> int:
@@ -76,6 +76,9 @@ def main() -> int:
     code = "import importlib; [importlib.import_module(n) for n in " + repr(IMPORTS) + "]; import torch; assert torch.cuda.is_available(); x=torch.ones(2,device='cuda'); assert float((x+x).sum())==4"
     if subprocess.run([sys.executable, "-c", code], check=False).returncode:
         print("BLOCKED: fresh-process dependency/GPU probe failed.", file=sys.stderr)
+        return 2
+    if subprocess.run([sys.executable, str(ROOT / "scripts/environment/check_pipeline.py")], check=False).returncode:
+        print("BLOCKED: installed pipeline/CLI/bin-loader compatibility probe failed.", file=sys.stderr)
         return 2
     freeze = subprocess.run([sys.executable, "-m", "pip", "list", "--format=json"],
                             capture_output=True, text=True, check=True)

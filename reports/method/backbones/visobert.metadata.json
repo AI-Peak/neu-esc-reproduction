@@ -1,0 +1,99 @@
+{
+  "_id": "652e260846e3998e41fec2a9",
+  "id": "uitnlp/visobert",
+  "private": false,
+  "pipeline_tag": "fill-mask",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "xlm-roberta",
+    "fill-mask",
+    "Vietnamese",
+    "Social Media",
+    "Vietnamese Pre-trained Model",
+    "Sentiment Analysis",
+    "Hate Speech Detection",
+    "Spam Detection",
+    "Emotionn Recognition",
+    "vi",
+    "endpoints_compatible",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 11297,
+  "likes": 35,
+  "modelId": "uitnlp/visobert",
+  "author": "uitnlp",
+  "sha": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+  "lastModified": "2024-06-09T14:21:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "widgetData": [
+    {
+      "text": "h\u00e0o quang r\u1ef1c <mask>"
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "XLMRobertaForMaskedLM"
+    ],
+    "model_type": "xlm-roberta"
+  },
+  "cardData": {
+    "pipeline_tag": "fill-mask",
+    "widget": [
+      {
+        "text": "h\u00e0o quang r\u1ef1c <mask>"
+      }
+    ],
+    "language": [
+      "vi"
+    ],
+    "tags": [
+      "Vietnamese",
+      "Social Media",
+      "Vietnamese Pre-trained Model",
+      "Sentiment Analysis",
+      "Hate Speech Detection",
+      "Spam Detection",
+      "Emotionn Recognition"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMaskedLM",
+    "pipeline_tag": "fill-mask",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": "README.md"
+    },
+    {
+      "rfilename": "config.json"
+    },
+    {
+      "rfilename": "pytorch_model.bin"
+    },
+    {
+      "rfilename": "sentencepiece.bpe.model"
+    }
+  ],
+  "spaces": [
+    "tardellirs/model-pulse",
+    "eduagarcia/multilingual-tokenizer-leaderboard",
+    "DucThinh04/ViSoBERT_Emotion_Recognition",
+    "duyntt0110/vietnamese-medical-icd10",
+    "bie-nhd/visobert-multi-task",
+    "CrossManger/absa-tourism-api",
+    "Doan-NLP/PhanLoai_Toxic_Comment",
+    "ndphuoc/visobert-sentiment-app"
+  ],
+  "createdAt": "2023-10-17T06:13:28.000Z",
+  "usedStorage": 781232693
+}

@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "url": "https://arxiv.org/abs/2506.23524",
+    "pdf_sha256": "bdc37ae84e6653ca60b325ccb54f7f655fb4cd1ee606d0f9a8a5a15772e7189c",
+    "page_numbering": "1-based PDF pages",
+    "table6_page": 18,
+    "figure3_page": 19
+  },
+  "verification": {
+    "table6_rows": 21,
+    "table6_numeric_cells": 126,
+    "table6_pdf_text_exact_match": true,
+    "table6_visually_verified": true,
+    "figure3_visually_verified": true,
+    "figure3_numeric_cells": 116,
+    "method": "Direct PDF text extraction for Table 6 plus visual inspection of freshly rendered pages 18/19; Figure 3 manually transcribed"
+  },
+  "artifacts_sha256": {
+    "table6.csv": "8ffc745a370578918968319423f45bf9c98228c262202a38dafb81338651276c",
+    "table6_metadata.json": "df819dd3668a9a19a7c433df95b78d2ef3b15c3b5ccf20222eb4414be5c8fd45",
+    "figure3_metadata.json": "807d8c506e332e42899957dc14a473f185f54a0c3b1f152777a256f020f52d97",
+    "source-page-18.png": "0fdcbd4a60d4f29e486a953cadc0172a366bff2ebf84359413cc3b2f065f2989",
+    "source-page-19.png": "6ae06aed103374ee06e4d481619defdb19970c8db5c2e3e923fbf2542a30114a"
+  },
+  "tasks": {
+    "sentiment": {
+      "source_page": 19,
+      "source_figure": "Figure 3",
+      "source_csv": "figure3_sentiment_counts.csv",
+      "csv_sha256": "bdafeb03a5d4ab5271bdbf785a8874cd519507652900d0e84c99eac3b72a51f5",
+      "shape": [
+        4,
+        4
+      ],
+      "orientation": "rows=true, columns=predicted",
+      "visually_verified_cells": 16,
+      "unverified_cells": [],
+      "n_samples": 6613,
+      "trace": 3619,
+      "accuracy": 0.5472554060184485,
+      "accuracy_pct": 54.72554060184485,
+      "row_totals": [
+        4558,
+        834,
+        1046,
+        175
+      ],
+      "column_totals": [
+        4952,
+        641,
+        884,
+        136
+      ],
+      "table6_accuracy_pct": 83.58,
+      "figure_minus_table6_pp": -28.85445939815515,
+      "inconsistent_with_table6": true
+    },
+    "topic": {
+      "source_page": 19,
+      "source_figure": "Figure 3",
+      "source_csv": "figure3_topic_counts.csv",
+      "csv_sha256": "0b9c76ff7817504efc7787b62b16e5b03d42b16389ae70e57b0af5f40e25a23f",
+      "shape": [
+        10,
+        10
+      ],
+      "orientation": "rows=true, columns=predicted",
+      "visually_verified_cells": 100,
+      "unverified_cells": [],
+      "n_samples": 6613,
+      "trace": 2074,
+      "accuracy": 0.31362467866323906,
+      "accuracy_pct": 31.362467866323907,
+      "row_totals": [
+        84,
+        183,
+        2104,
+        2882,
+        474,
+        163,
+        298,
+        155,
+        137,
+        133
+      ],
+      "column_totals": [
+        68,
+        131,
+        2220,
+        3078,
+        433,
+        175,
+        188,
+        113,
+        101,
+        106
+      ],
+      "table6_accuracy_pct": 79.8,
+      "figure_minus_table6_pp": -48.437532133676086,
+      "inconsistent_with_table6": true
+    }
+  },
+  "conclusion": "Figure 3 counts are inconsistent with Table 6 for ViSoBERT MTL+SMART. Cause is not established.",
+  "unverified_hypotheses": [
+    "predictions/labels order mismatch",
+    "different checkpoint",
+    "different evaluation data"
+  ],
+  "reproduction_results": false
+}

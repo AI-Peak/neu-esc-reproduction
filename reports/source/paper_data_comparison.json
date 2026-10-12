@@ -1,0 +1,92 @@
+{
+  "sentiment": {
+    "github_counts": [
+      22773,
+      4148,
+      5200,
+      845
+    ],
+    "paper_table1_counts": [
+      22773,
+      4148,
+      5250,
+      845
+    ],
+    "paper_table1_count_sum": 33016,
+    "source_row_sum": 32966,
+    "difference": "Negative count 5200 in CSV, 5250 in Table 1"
+  },
+  "topic": {
+    "github_counts": [
+      405,
+      902,
+      10512,
+      14402,
+      2358,
+      808,
+      1478,
+      769,
+      670,
+      662
+    ],
+    "paper_table2_counts": [
+      405,
+      902,
+      10512,
+      14402,
+      2358,
+      808,
+      1478,
+      769,
+      670,
+      662
+    ],
+    "marginals_match": true
+  },
+  "figure3_test_marginals": {
+    "sentiment": {
+      "github_test_counts": [
+        4558,
+        834,
+        1046,
+        175
+      ],
+      "figure3_true_row_counts": [
+        4558,
+        834,
+        1046,
+        175
+      ],
+      "marginals_match": true
+    },
+    "topic": {
+      "github_test_counts": [
+        84,
+        183,
+        2104,
+        2882,
+        474,
+        163,
+        298,
+        155,
+        137,
+        133
+      ],
+      "figure3_true_row_counts": [
+        84,
+        183,
+        2104,
+        2882,
+        474,
+        163,
+        298,
+        155,
+        137,
+        133
+      ],
+      "marginals_match": true
+    }
+  },
+  "figure3_evidence_sha256": "5f04c9cac230006a0e2ddd23c9b71a0514299a10400483d75d9952871a58d42e",
+  "interpretation": "Equal marginals support label order/count consistency; do not prove same samples, text revision or prediction/label ordering"
+}

@@ -1,0 +1,146 @@
+{
+  "_id": "64465fafe113660053725cdb",
+  "id": "vinai/phobert-base-v2",
+  "private": false,
+  "pipeline_tag": "fill-mask",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "roberta",
+    "fill-mask",
+    "vi",
+    "license:agpl-3.0",
+    "endpoints_compatible",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 64869,
+  "likes": 32,
+  "modelId": "vinai/phobert-base-v2",
+  "author": "vinai",
+  "sha": "86cd7fd4c148980922ac11a2cf5e257f2ba639e1",
+  "lastModified": "2026-08-03T15:03:03.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "RobertaForMaskedLM"
+    ],
+    "model_type": "roberta"
+  },
+  "cardData": {
+    "license": "agpl-3.0",
+    "language": [
+      "vi"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMaskedLM",
+    "pipeline_tag": "fill-mask",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": "LICENSE"
+    },
+    {
+      "rfilename": "README.md"
+    },
+    {
+      "rfilename": "bpe.codes"
+    },
+    {
+      "rfilename": "config.json"
+    },
+    {
+      "rfilename": "pytorch_model.bin"
+    },
+    {
+      "rfilename": "tokenizer.json"
+    },
+    {
+      "rfilename": "vocab.txt"
+    }
+  ],
+  "spaces": [
+    "tardellirs/model-pulse",
+    "letrggghieu/v-vietnamese-tts",
+    "eduagarcia/multilingual-tokenizer-leaderboard",
+    "letrggghieu/v-zeroshot-voice-cloning",
+    "Linhz/ViMNer",
+    "ThanhNguyen1811/phobert-violence",
+    "dorangao/landify-scam-detector",
+    "hoanglongnguyen/shopee_sentiment_analyst",
+    "duyntt0110/vietnamese-medical-icd10",
+    "truong-xuan-linh/content-category-classification",
+    "hohieu/sheet_rag_chatbot",
+    "hohieu/pdf_rag_chatbot",
+    "tpha4308/keybertvi-app",
+    "hienntd/TextClassification-PhoBERT",
+    "hungdungn47/MultiDocsSummarization",
+    "mc0c0z/btl-nlp",
+    "zerostratos/toxic_classification_model",
+    "darkbreakerk/triventure_ai",
+    "ABAO77/triventure_ai",
+    "jesse-tong/vietnamese_hate_speech_detection",
+    "ABAO77/TriVenture-Personalize",
+    "HTThuanHcmus/title-generation-and-summarization",
+    "ABAO77/Triventure-AI",
+    "HTThuanHcmus/Project-ML",
+    "hzcay/movie-ticket-assistant",
+    "ThanhNguyen1811/phobert-audio",
+    "louis-it/keybertvi-app",
+    "mr2along/vietnamese_hate_speech_detection",
+    "meandyou200175/demo_intent",
+    "sondopin/phobert-embedding",
+    "sondopin/get-embedding",
+    "sondopin/predict-fastapi",
+    "ndyah2020/VietSent_Pipeline",
+    "ThuanChi/ViHOS-Final",
+    "hoangquocviet/valtec-vietnamese-tts",
+    "CVNSS/TTS-Demo",
+    "hoanglinhn0/valtec-vietnamese-tts",
+    "ntnmmm/AI_Summerization",
+    "htg2501/AI",
+    "htg2501/Vietnamese-Multi-Docs",
+    "huyvux3005/valtec-vietnamese-tts-sever",
+    "Ukelele0718/podcast-vietnamese-dubbing-v2",
+    "hoangtuanhung/valtec-vietnamese-tts",
+    "DazKha/phobert-multi-intent-classifier",
+    "Dinhpt/rag-luan-van-2026",
+    "522H0134-NguyenNhatHuy/Vi-VQA-Animals",
+    "hiuS04/phobert-absa-server",
+    "phucnguyen27/AI_HANH_CHINH",
+    "nbinh3120/AI-DATING",
+    "thongle/phobert-v2-hsd",
+    "nhiney/viemotion",
+    "h-i-e-u/vi-sense-app",
+    "azan100an/vqa-herb-demo",
+    "jayandy/phobert-toxic-detection-demo",
+    "HoangThanhTy/truthlens-backend",
+    "minhkhang2201/vietnamese-news-clustering",
+    "tinhthien115/valtec-vietnamese-tts",
+    "hoanglongnguyen/BTL_Nhom10",
+    "hoanglongnguyen/sentiment_analyst",
+    "hoanglongnguyen/customer_sentiment_analyst",
+    "dinhvietduy/valtec-zeroshot-voice-cloning",
+    "Lequyen26/nutrition-backend",
+    "baob2112/drug-ner",
+    "dlhdwan/absa-review-smartphone_api",
+    "giangpvg/ChatBot_Yte",
+    "nhphuc1411/phobert-sentiment-demo",
+    "DazKha/vslim-server",
+    "EthanDevz/VieGrader_0.4.0_GUI_HF_StageReports",
+    "baoquanhihihi/ViABSA-Backend",
+    "nguyennghia0902/W2V_TextCLS_arena",
+    "hanhtmnguyen90/W2V_TextCLS_arena"
+  ],
+  "createdAt": "2023-04-24T10:53:35.000Z",
+  "usedStorage": 1080603959
+}

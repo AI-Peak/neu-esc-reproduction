@@ -43,6 +43,8 @@ def test_external_markers_are_detected_before_import(tmp_path):
     assert load("offline_tests").has_external_marker(path)
     path.write_text("def test_cpu():\n    assert True\n", encoding="utf-8")
     assert not load("offline_tests").has_external_marker(path)
+    path.write_text("import pytest\n@pytest.mark.dataset\ndef test_real_data():\n    pass\ndef test_cpu():\n    pass\n", encoding="utf-8")
+    assert not load("offline_tests").has_external_marker(path)
 
 
 def test_gitignore_preserves_manifests_and_blocks_sensitive_files(tmp_path):

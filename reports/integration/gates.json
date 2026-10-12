@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.0",
+  "status": "PARTIAL",
+  "checked_at_utc": "2026-10-12T05:54:03.909670+00:00",
+  "scope": {
+    "priority": "visobert/mtl_smart: sentiment+topic, paper_method",
+    "llm": "OUT_OF_SCOPE",
+    "llm_missing_is_blocker": false,
+    "encoder_configs": 22,
+    "planned_successful_encoder_runs": 70,
+    "full_training_executed": false
+  },
+  "inputs": {
+    "head": "1bac0e991ecf200e1356debe9ff79d01f331c2ad",
+    "clean": false,
+    "manifest_digest": "ea127f55e840991e53569379a9b3e8ac00bc6798108d6472f8ab300a109f8f7d",
+    "snapshot": "reports/integration/input_snapshot.json",
+    "snapshot_sha256": "5c97a6d61956135affc76e5276e525651331369ab5fb3a71320094dd3c2aaed4"
+  },
+  "tests_actually_run": [
+    {
+      "path": "runs/smoke/integration/module-tests.xml",
+      "sha256": "d6fc9e49755eff9c064678d959a0b09cbb0b769413254181e75ee68b9677849c",
+      "tests": 172,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 8
+    },
+    {
+      "path": "runs/smoke/integration/integration-tests.xml",
+      "sha256": "f9cbd15c9ba72e2a86ab3f6bc33c07adc04bae8815ee066e62babc5eb7dde469",
+      "tests": 3,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  ],
+  "receipts": [
+    {
+      "path": "runs/smoke/integration/end-to-end-001/receipt.json",
+      "sha256": "09bacf64cc59d645f6ccfb7dd21deb2144557b14751eb327221fc7b9669cce35"
+    },
+    {
+      "path": "runs/smoke/integration/clean-install-001/receipt.json",
+      "sha256": "ed1e11bbb88dbc96bcee327ae339f7cb21e86b79a13a58d1d3421774aeebff85"
+    },
+    {
+      "path": "runs/smoke/integration/real-data-verification.json",
+      "sha256": "9f9bdb8609014bdc89d1c4b4bdcdfb716dba7459eaaa1dbb369b67979dbb451f"
+    },
+    {
+      "path": "runs/smoke/integration/end-to-end-001/validation-artifact-checks.json",
+      "sha256": "3434c8780eb01a10f4ae097363cfad66c7afa8ff286b41a7e8bde08453ef8d3c"
+    },
+    {
+      "path": "runs/smoke/integration/regeneration-check.json",
+      "sha256": "90943b0367409f74caadbdfc5143fc3687456807f2fbd219a180af2a83d90561"
+    }
+  ],
+  "gates": {
+    "DATA_TECHNICAL_READY": {
+      "status": "PASS",
+      "rows": {
+        "test": 6613,
+        "train": 23048,
+        "validation": 3305
+      },
+      "unique_ids": 32966,
+      "notice": "Pinned GitHub alternative revision; HF/paper equivalence unverified"
+    },
+    "EXACT_PAPER_DATA_EQUIVALENCE": {
+      "status": "UNVERIFIED",
+      "blocks_technical_p0": false
+    },
+    "P0_READY": {
+      "status": "CPU_PASS/GPU_PENDING",
+      "cpu_pipeline": "PASS",
+      "colab_release": "BLOCKED",
+      "full_pretrained_gpu_backward": "PENDING",
+      "errors": [
+        "I06-01"
+      ],
+      "validation_report_issue": "I06-02"
+    },
+    "FULL_VARIANTS_READY": {
+      "status": "CPU_PASS/GPU_PENDING",
+      "configs": 22,
+      "tiny_cpu_variants": [
+        "mtl_smart",
+        "st_sentiment",
+        "st_topic",
+        "mtl",
+        "mtl_mlm",
+        "mtl_mlm_smart"
+      ],
+      "full_pretrained_gpu_variants": "PENDING"
+    },
+    "CLEAN_INSTALL_CPU": {
+      "status": "PASS",
+      "source": "Wheel built from current uncommitted bytes; fresh isolated venv and hash-locked CPU dependencies",
+      "release_verified": false
+    },
+    "ID_LABEL_ALIGNMENT": {
+      "status": "PASS",
+      "real_rows_checked": 32966,
+      "real_test_diagnostic_count_per_task": 6613,
+      "diagnostic_predictions_are_benchmark": false,
+      "permutation_and_negative_cli": "PASS"
+    },
+    "RESUME_CPU": {
+      "status": "PASS",
+      "optimizer_boundary": "PASS",
+      "exact_six_variant_state_comparison": "PASS (module test receipt)",
+      "stale_seed_revision_manifest": "REJECTED",
+      "missing_marker_corrupt_state": "REJECTED",
+      "gpu": "PENDING"
+    },
+    "VALIDATION_REPORT_READY": {
+      "status": "FAIL",
+      "errors": [
+        "I06-02"
+      ],
+      "checkpoint_selection_metric_affected": false,
+      "test_cli_report_affected": false
+    },
+    "SAVED_ARTIFACT_REGENERATION": {
+      "status": "PASS",
+      "p0_test_artifacts_byte_identical": 12,
+      "validation_variants_recomputed": 6,
+      "benchmark_eligible": false
+    },
+    "COLAB_RELEASE_READY": {
+      "status": "BLOCKED",
+      "errors": [
+        "I06-01"
+      ],
+      "commit_missing_files": [
+        "configs/data/dataset.yaml",
+        "configs/experiments/mbert/st_sentiment.yaml",
+        "configs/experiments/mbert/st_topic.yaml",
+        "configs/experiments/phobert/mtl.yaml",
+        "configs/experiments/phobert/mtl_mlm.yaml",
+        "configs/experiments/phobert/mtl_mlm_smart.yaml",
+        "configs/experiments/phobert/mtl_smart.yaml",
+        "configs/experiments/phobert/st_sentiment.yaml",
+        "configs/experiments/phobert/st_topic.yaml",
+        "configs/experiments/velectra/st_sentiment.yaml",
+        "configs/experiments/velectra/st_topic.yaml",
+        "configs/experiments/visobert/mtl.yaml",
+        "configs/experiments/visobert/mtl_mlm.yaml",
+        "configs/experiments/visobert/mtl_mlm_smart.yaml",
+        "configs/experiments/visobert/mtl_smart.yaml",
+        "configs/experiments/visobert/st_sentiment.yaml",
+        "configs/experiments/visobert/st_topic.yaml",
+        "configs/experiments/xlm_r/mtl.yaml",
+        "configs/experiments/xlm_r/mtl_mlm.yaml",
+        "configs/experiments/xlm_r/mtl_mlm_smart.yaml",
+        "configs/experiments/xlm_r/mtl_smart.yaml",
+        "configs/experiments/xlm_r/st_sentiment.yaml",
+        "configs/experiments/xlm_r/st_topic.yaml",
+        "configs/models/mbert.yaml",
+        "configs/models/phobert.yaml",
+        "configs/models/velectra.yaml",
+        "configs/models/visobert.yaml",
+        "configs/models/xlm_r.yaml",
+        "src/neu_esc/data/__init__.py",
+        "src/neu_esc/data/_java_bridge.py",
+        "src/neu_esc/data/audit.py",
+        "src/neu_esc/data/common.py",
+        "src/neu_esc/data/dataset.py",
+        "src/neu_esc/data/prepare.py",
+        "src/neu_esc/data/resources.py",
+        "src/neu_esc/data/segmentation.py",
+        "src/neu_esc/evaluation/__init__.py",
+        "src/neu_esc/evaluation/aggregate.py",
+        "src/neu_esc/evaluation/audit_reference.py",
+        "src/neu_esc/evaluation/evaluate.py",
+        "src/neu_esc/evaluation/plotting.py",
+        "src/neu_esc/losses/__init__.py",
+        "src/neu_esc/losses/classification.py",
+        "src/neu_esc/losses/mlm.py",
+        "src/neu_esc/losses/smart.py",
+        "src/neu_esc/models/__init__.py",
+        "src/neu_esc/models/encoder.py",
+        "src/neu_esc/training/__init__.py",
+        "src/neu_esc/training/checkpoint.py",
+        "src/neu_esc/training/config.py",
+        "src/neu_esc/training/engine.py",
+        "src/neu_esc/training/predict.py",
+        "src/neu_esc/training/runtime.py",
+        "src/neu_esc/training/train.py"
+      ]
+    },
+    "COLAB_RUNTIME_READY": {
+      "status": "GPU_PENDING",
+      "notebook_present": false,
+      "gpu_verified": false,
+      "drive_sync_verified": false,
+      "throughput_verified": false,
+      "owner_module": "07"
+    },
+    "LLM_READY": {
+      "status": "NOT_APPLICABLE",
+      "reason": "User removed LLM benchmark; module 05 not required"
+    },
+    "BENCHMARK_REPORT_READY": {
+      "status": "PENDING",
+      "successful_encoder_runs": 0,
+      "target": 70,
+      "ledger": "reports/integration/campaign_ledger.json",
+      "smoke_and_retries_counted": false,
+      "owner_module": "07/08"
+    }
+  },
+  "errors": [
+    {
+      "id": "I06-01",
+      "owner_module": "04",
+      "severity": "P1",
+      "blocks": "COLAB_RELEASE_READY",
+      "expected": "Pinned clean commit includes READY data/training/evaluator/configs/integration files",
+      "actual": "HEAD 1bac0e991ecf200e1356debe9ff79d01f331c2ad contains infrastructure only; 54 executable/config files absent",
+      "reproduction": "git show HEAD:src/neu_esc/training/train.py"
+    },
+    {
+      "id": "I06-02",
+      "owner_module": "02",
+      "severity": "P2",
+      "blocks": "VALIDATION_REPORT_READY",
+      "expected": "Persist validation metrics with method_mode/backbone/variant matching resolved config",
+      "actual": "aggregation requires nonempty method_mode",
+      "reproduction": "Read persisted validation metrics then call aggregate_cohort([metrics], expected_seeds=[42])"
+    }
+  ],
+  "limitations": [
+    "No actual Colab runtime or GPU output supplied",
+    "Tiny initialized BERT checks do not demonstrate full pretrained ViSoBERT performance or batch8/length128 VRAM fit",
+    "No benchmark metrics produced",
+    "No files owned by modules 01-04 were edited, staged or committed"
+  ]
+}

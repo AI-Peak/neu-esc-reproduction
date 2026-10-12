@@ -1,0 +1,5 @@
+# Dataset redistribution permission has not been established for the GitHub copy.
+# Commit configs/manifests/audits, NOT cached data or third-party executables.
+/raw/
+/processed/
+/resources/

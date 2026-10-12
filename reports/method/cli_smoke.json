@@ -1,0 +1,70 @@
+{
+  "fixture_only": true,
+  "benchmark": false,
+  "base": "runs\\smoke\\training\\cli-de1e4102ed2d",
+  "commands": [
+    {
+      "argv": [
+        "-m",
+        "neu_esc.training.train",
+        "--config",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\tiny.resolved.yaml",
+        "--seed",
+        "42",
+        "--run-dir",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\run",
+        "--stop-after-steps",
+        "2"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"run_id\": \"run\", \"run_status\": \"INTERRUPTED\", \"benchmark_eligible\": false}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "-m",
+        "neu_esc.training.train",
+        "--config",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\tiny.resolved.yaml",
+        "--seed",
+        "42",
+        "--run-dir",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\run",
+        "--resume"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"run_id\": \"run\", \"run_status\": \"COMPLETED\", \"benchmark_eligible\": false}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "-m",
+        "neu_esc.training.predict",
+        "--run-dir",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\run",
+        "--split",
+        "test"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"predictions\": \"runs\\\\smoke\\\\training\\\\cli-de1e4102ed2d\\\\run\\\\predictions\\\\test.jsonl\", \"sha256\": \"d9c2864fdadef6b9c3e1a26c2530fa847ee60a74b5c4f38ca4d43f420a2b75d6\", \"rows\": 16}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "-m",
+        "neu_esc.evaluation.evaluate",
+        "--predictions",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\run\\predictions\\test.jsonl",
+        "--dataset-manifest",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\dataset.json",
+        "--output",
+        "runs\\smoke\\training\\cli-de1e4102ed2d\\run\\evaluation\\test"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"output\": \"runs\\\\smoke\\\\training\\\\cli-de1e4102ed2d\\\\run\\\\evaluation\\\\test\", \"split\": \"test\", \"tasks\": [\"sentiment\", \"topic\"], \"task_source\": \"declared\"}\n",
+      "stderr": ""
+    }
+  ],
+  "status": "PASS",
+  "predictions_rows": 16
+}

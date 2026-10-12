@@ -1,0 +1,11 @@
+true_label/predicted_label,Spam,News,Academic,Other,Service,Jobs & Recruitment,Personal Affairs,Social Affairs,Help & Share,Club & Events
+Spam,0,1,33,35,7,4,0,1,2,1
+News,2,3,69,82,13,4,2,2,3,3
+Academic,15,42,686,997,150,48,61,34,33,38
+Other,28,61,980,1322,181,92,80,46,49,43
+Service,10,9,147,234,31,11,9,10,7,6
+Jobs & Recruitment,3,4,57,77,11,3,3,1,2,2
+Personal Affairs,5,7,99,140,11,8,18,5,0,5
+Social Affairs,0,2,51,71,10,3,7,7,1,3
+Help & Share,2,2,46,70,8,1,1,2,2,3
+Club & Events,3,0,52,50,11,1,7,5,2,2

@@ -1,0 +1,27 @@
+model_id: FacebookAI/xlm-roberta-base
+model_revision: e73636d4f797dec63c3081bb6ed5c7b0bb3f2089
+tokenizer_id: FacebookAI/xlm-roberta-base
+tokenizer_revision: e73636d4f797dec63c3081bb6ed5c7b0bb3f2089
+config_sha256: d66ed8cd4f2a93b358c245e50736fa389ed4f35c0bae7aad0b32abb20c62b579
+encoder_hidden_size: 768
+vocab_size: 250002
+model_type: xlm-roberta
+max_position_embeddings: 514
+hidden_dropout: 0.1
+attention_dropout: 0.1
+weights_loaded: false
+paper_revision_known: false
+tokenizer_verified: true
+tokenizer_class: XLMRobertaTokenizer
+special_token_ids:
+- 0
+- 2
+- 3
+- 1
+- 250001
+pad_token_id: 1
+mask_token_id: 250001
+tokenizer_files_sha256:
+  sentencepiece.bpe.model: cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865
+  special_tokens_map.json: 8574792bfefae68f2ce2eae93a4145d95b1232c59e71094bcdcb49dbcb549c97
+  tokenizer_config.json: 3c996d42da48ee1604c81cb80d05ff099e0dc6219f3b735672231178ec96a4e4

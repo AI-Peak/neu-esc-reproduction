@@ -1,0 +1,79 @@
+[
+  {
+    "path": "data/raw/reference/README.md",
+    "source_path": "README.md",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/README.md",
+    "sha256": "f92569bddee5278e951cc37a4db21fb68932f2d407f69665a8aa176e12a9fdda",
+    "bytes": 938
+  },
+  {
+    "path": "data/raw/reference/utils/dataloader.py",
+    "source_path": "utils/dataloader.py",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/utils/dataloader.py",
+    "sha256": "033df8846dfa2a684f6117f255618d2588fd304d24e6232c39df05548ee042e2",
+    "bytes": 8153
+  },
+  {
+    "path": "data/raw/reference/train.py",
+    "source_path": "train.py",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/train.py",
+    "sha256": "14eddac67286ec8143a8c6e1a100f89b07a17742303cbd3595845d207f509f74",
+    "bytes": 2460
+  },
+  {
+    "path": "data/raw/reference/predict.py",
+    "source_path": "predict.py",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/predict.py",
+    "sha256": "71d1dd115061c3f3c63de2a9998650c7c1c9a2179be9483dfdfca3f0653c63f8",
+    "bytes": 4761
+  },
+  {
+    "path": "data/raw/reference/eda.ipynb",
+    "source_path": "eda.ipynb",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/eda.ipynb",
+    "sha256": "6bc71cef44472f8becc0ca0aa1aa77b5453a810301df50adfd54c800032e8add",
+    "bytes": 216467
+  },
+  {
+    "path": "data/raw/github/dataset/train_set.csv",
+    "source_path": "dataset/train_set.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set.csv",
+    "sha256": "8a18a73ca21105e0b424829cc41395719be98dd7f01bf3d962eca86e7a1501ec",
+    "bytes": 3315117
+  },
+  {
+    "path": "data/raw/github/dataset/train_set_processed.csv",
+    "source_path": "dataset/train_set_processed.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/train_set_processed.csv",
+    "sha256": "7ca23b39e8e917de5c81745b0be2f4bb0e085fdc6173882479ecb2ed8e9ebe96",
+    "bytes": 3315795
+  },
+  {
+    "path": "data/raw/github/dataset/val_set.csv",
+    "source_path": "dataset/val_set.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set.csv",
+    "sha256": "0b2567fe5374cf9b8d22de92ce71d3f9bfa036dffac46fa6f7a5650e85c81169",
+    "bytes": 482004
+  },
+  {
+    "path": "data/raw/github/dataset/val_set_processed.csv",
+    "source_path": "dataset/val_set_processed.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/val_set_processed.csv",
+    "sha256": "948578e4b92df56117fd38d8edaee8d98f11adbd38611d6faee655008adea626",
+    "bytes": 482110
+  },
+  {
+    "path": "data/raw/github/dataset/test_set.csv",
+    "source_path": "dataset/test_set.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set.csv",
+    "sha256": "cdd81b2c7b96752f9f45d05e231682fcd6c380f40273dac521425ceff71ab312",
+    "bytes": 996203
+  },
+  {
+    "path": "data/raw/github/dataset/test_set_processed.csv",
+    "source_path": "dataset/test_set_processed.csv",
+    "url": "https://raw.githubusercontent.com/hung20gg/multi-task-bert/b5637cc0a8a7b5e88e794d180c11902405548eb5/dataset/test_set_processed.csv",
+    "sha256": "bf850a67db6f9dd48df2adc5aa181e63e052e526361a1e9f0e6179bf582dc2e4",
+    "bytes": 996420
+  }
+]

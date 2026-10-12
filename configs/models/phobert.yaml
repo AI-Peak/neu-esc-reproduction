@@ -1,0 +1,29 @@
+model_id: vinai/phobert-base-v2
+model_revision: 86cd7fd4c148980922ac11a2cf5e257f2ba639e1
+tokenizer_id: vinai/phobert-base-v2
+tokenizer_revision: 86cd7fd4c148980922ac11a2cf5e257f2ba639e1
+config_sha256: 26d21a304fdea8fada88e7c6b7c7fef15c902c690bfb0fa47f60bdb61c68307a
+encoder_hidden_size: 768
+vocab_size: 64001
+model_type: roberta
+max_position_embeddings: 258
+hidden_dropout: 0.1
+attention_dropout: 0.1
+weights_loaded: false
+paper_revision_known: false
+tokenizer_verified: true
+tokenizer_class: PhobertTokenizer
+special_token_ids:
+- 0
+- 2
+- 3
+- 1
+- 64000
+pad_token_id: 1
+mask_token_id: 64000
+tokenizer_files_sha256:
+  added_tokens.json: 6887f87ac991379ea91aedb4dd5e1af4f6ee38693ec0ca1c2b6209559ce283d8
+  bpe.codes: 9dfe53fb8abbddd3387da99641c36e00bee757a3679aad9cf0a7cdc4b30f6ef8
+  special_tokens_map.json: eaf93cc0da3f87f0b8b13b433234465ee99aede80e008704ea480062035c2cee
+  tokenizer_config.json: 1831a4ad4d2026800aad7814fcf48e65c74f71a2ebaac7dadda330e66d8a4d40
+  vocab.txt: dffd7543c401fb6567253ae7c3313004532c33d062525250049c616544bad777

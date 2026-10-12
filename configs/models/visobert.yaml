@@ -1,0 +1,27 @@
+model_id: uitnlp/visobert
+model_revision: 196a62afad9cbe4f52a54aabad828b13f0eec59a
+tokenizer_id: uitnlp/visobert
+tokenizer_revision: 196a62afad9cbe4f52a54aabad828b13f0eec59a
+config_sha256: 99f4bc7d491384004a7b9798a7c37a3f8c8c33e566cbb70dd7241acd1211a4fe
+encoder_hidden_size: 768
+vocab_size: 15004
+model_type: xlm-roberta
+max_position_embeddings: 514
+hidden_dropout: 0.1
+attention_dropout: 0.1
+weights_loaded: false
+paper_revision_known: false
+tokenizer_verified: true
+tokenizer_class: XLMRobertaTokenizer
+special_token_ids:
+- 0
+- 2
+- 3
+- 1
+- 15001
+pad_token_id: 1
+mask_token_id: 15001
+tokenizer_files_sha256:
+  sentencepiece.bpe.model: 02aaf05cda4db99e86b7c76eba6258867ce4d043da0fed19c87a7d46c8b53a65
+  special_tokens_map.json: 8574792bfefae68f2ce2eae93a4145d95b1232c59e71094bcdcb49dbcb549c97
+  tokenizer_config.json: a2bf2ce6aea2731de53fe85069a1229402a916f561c0579c33a9e8c4997bb8f9

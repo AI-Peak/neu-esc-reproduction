@@ -1,0 +1,119 @@
+schema_version: '1.0'
+experiment_id: xlm_r-st_sentiment
+backbone: xlm_r
+model_id: FacebookAI/xlm-roberta-base
+model_revision: e73636d4f797dec63c3081bb6ed5c7b0bb3f2089
+tokenizer_id: FacebookAI/xlm-roberta-base
+tokenizer_revision: e73636d4f797dec63c3081bb6ed5c7b0bb3f2089
+variant: st_sentiment
+tasks:
+- sentiment
+method_mode: paper_method
+dataset_manifest: data/manifests/dataset.json
+dataset_manifest_digest: ea127f55e840991e53569379a9b3e8ac00bc6798108d6472f8ab300a109f8f7d
+text_variant: raw
+max_length: 128
+seed: 42
+training:
+  mode: full
+  epochs: 15
+  max_steps: null
+  batch_size: 8
+  gradient_accumulation_steps: 16
+  effective_batch_size: 128
+  eval_batch_size: 32
+  optimizer: adamw
+  learning_rate: 2.0e-05
+  adam_epsilon: 1.0e-08
+  betas:
+  - 0.9
+  - 0.999
+  weight_decay: 0.01
+  scheduler: linear_epoch
+  scheduler_end_factor: 0.2
+  warmup_steps: 0
+  precision: fp32
+  gradient_clipping: null
+  head_dropout: 0.0
+  encoder_hidden_dropout: 0.1
+  encoder_attention_dropout: 0.1
+  st_native_head_dropout: 0.1
+  head_layer_norm_eps: 1.0e-05
+  pooling: first_token
+  classification_reduction: mean
+  task_weights:
+    sentiment: 1.0
+  tokenizer_use_fast: false
+  padding: max_length
+  num_workers: 0
+  num_threads: 1
+  deterministic: true
+  checkpoint_every_steps: 50
+  smoke_sample_limit: 8
+smart:
+  enabled: false
+  epsilon: 0.001
+  steps: 1
+  step_size: 0.001
+  gradient_eps: 1.0e-06
+  weight: 0.02
+  noise_std: 1.0e-05
+  norm: linf_per_token
+  reduction: batchmean
+  dropout_policy: eval_for_regularizer
+  exclude_special_pad: true
+  independent_task_noise: true
+mlm:
+  enabled: false
+  mask_rate: 0.3
+  selected_distribution:
+  - 0.8
+  - 0.1
+  - 0.1
+  weight: 1.0
+  reduction: sum_then_normalize
+  denominator: selected_tokens
+  input_policy: separate_masked_forward
+  exclude_special_pad: true
+  head_initialization: random_untied
+  empty_target_policy: zero_skip_forward
+selection:
+  metric: macro_f1
+  aggregation: mean_tasks
+  split: validation
+  tie_break: earliest_epoch
+assumptions:
+- Dataset is the pinned GitHub alternative revision and current VnCoreNLP segmentation
+  from module 01; equivalence to gated HF/paper revision remains unverified.
+- Paper does not identify checkpoint revisions. These immutable upstream SHAs were
+  audited on 2026-10-11; paper-time revisions remain unknown.
+- Paper omits training hyperparameters. AdamW lr=2e-5, length=128, ST=15 epochs, MTL=20
+  epochs follow public scripts; other resolved settings are explicit assumptions.
+- MTL classification sums mean CE with task weights 1/1 following paper; public 2-head
+  trainer averages 0.5/0.5 instead.
+- Physical batch 8, accumulation 16, effective batch 128 is a Colab memory assumption;
+  microbatch means (MLM/SMART included) are sample-weighted. This differs from physical
+  batch 128 with dropout.
+- MTL uses first hidden token then Linear/SiLU/LayerNorm; public head dropout 0.2
+  is declared but unused, so effective extra head dropout=0.0.
+- ST uses each backbone's native AutoModelForSequenceClassification head as in public
+  base_trainer; it does not reuse the MTL shared projection.
+- SMART uses independent continuous embedding adversaries, linf radius 1e-3, noise
+  std 1e-5, step 1e-3, 1 step, gradient epsilon 1e-6; radius is not specified in paper.
+- SMART weight 0.02 follows repo; batchmean symmetric KL replaces repo final sum reduction.
+  This is a documented normalization assumption, not an exact public-code reproduction.
+- SMART disables dropout for clean/adversarial regularizer forwards and excludes special/pad
+  tokens. Supervised/MLM forwards keep native encoder dropout 0.1.
+- MLM uses independent Bernoulli token selection at p=0.30 and selected-token 80/10/10,
+  excluding special/pad IDs; random replacement also excludes special IDs.
+- MLM raw CE is sum per sentence. Divide by mean selected tokens per sentence once,
+  yielding sum CE / selected count; public trainer divides an already mean CE again.
+- MLM head is random untied Linear/SiLU/LayerNorm/Linear(hidden,vocab_size), not pretrained
+  MLM weights; original code hardcodes 64001, unsuitable for ViSoBERT/XLM-R.
+- 'Validation checkpoint: max mean task macro-F1, fixed 4/10 labels, earliest epoch
+  wins ties. No test selection, no early stopping, no class weighting.'
+- Epoch-linear scheduler ends at 0.2 for ST and 0.1 for MTL; full epochs are used
+  despite inconsistent public script comments.
+- fp32, deterministic algorithms, num_workers=0, num_threads=1, TF32 disabled; no
+  clipping or warmup; AdamW weight decay=0.01 and betas=0.9/0.999 are saved defaults
+  from public optimizer usage.

@@ -1,3 +1,54 @@
+# Module 04 — encoder release candidate, 12/10/2026
+
+Status: PARTIAL
+
+Local/package Status: READY
+
+Org/repo Status: READY
+
+Release candidate Status: PREPARED — implementation allowlist reviewed; clean checkout and CI verification pending
+
+GPU_EXECUTION: PENDING
+
+MODULE_06_RECHECK: PENDING — giữ các gates/handoff 06 cũ như evidence lịch sử, không sửa thay chủ module
+
+LLM: OUT_OF_SCOPE — không chờ 05
+
+## I06-02 prerequisite đã kiểm tra trước chốt release
+
+Handoff 02 mới READY; receipt `reports/method/i06-02-verification.json` hash `c20f24dbe2f95bdfe0539e2901eaba3a7fb1f97178dc1d5214a3c54570c249d4` và JUnit `77982989ba8efa2373ced586dd99a69d13997a915800b3a37475ec64d72e38ba` khớp. Ba fresh smoke ST sentiment/ST topic/MTL+SMART PASS, metadata/aggregate/metrics/selection khớp. Đã kiểm protected model/loss/config/data/evaluator bytes và toàn bộ artifacts cũ không đổi.
+
+04 đã thực chạy lại reproduction P0 → exit 0/PASS, regression metadata unit → 4 pass, và toàn bộ `pytest tests/training` → **34 pass, 8 GPU skipped**, 92.92s. Không sửa implementation/test của modules 01/02/03/06. Những checks này là smoke/CPU, không benchmark.
+
+## Allowlist/review và outputs mới
+
+- `scripts/environment/release-inventory-20261012.json`: 151 READY files của 01/02/03/06, hashes gốc khi owner/receipt có và hashes review 04 cho paths READY chưa có checksum riêng. Hash mismatch được reject; READY paths không đồng nghĩa cho phép ship cache.
+- `scripts/environment/release-allowlist.txt`: file-by-file stage list gồm READY module paths và đúng updates thuộc 04. Không glob/directory hoặc `git add .`.
+- `scripts/environment/review_release.py`: read-only ownership/hash/syntax/metadata/archive/credential review; không stage hoặc sửa source owner.
+- `scripts/environment/check_pipeline.py`: imports data/model/loss/training/evaluator thật, 22 full configs, 5 CLI helps, Transformers torch bin-loader compatibility guard; không download model.
+- Packaging/locks: `torch>=2.6`, `Pillow>=10.1`, `pypdf`; CPU lock resolved/installed có hash verification, PyYAML/JDK/Colab constraints giữ đúng phạm vi.
+- CI: module/integration CPU tests + P0 train→interrupt/resume→predict→evaluate→persisted validation aggregation. Runner giữ CPU cases trong file có case-level dataset/GPU marker.
+- `.gitattributes` giữ nguyên hai file CRLF đã được 03 bàn giao (`figure3_audit.json/.md`), tránh đổi checksum khi checkout. Các source/config/test files READY khác đã LF; không normalize hoặc sửa implementation owner.
+- 17 downloaded tokenizer cache/resource files dù có trong allowlist 02 vẫn **không ship**. Hashes/revisions/evidence config/metadata còn trong release; full run tải qua HF pinned revision. Raw/processed/resources/checkpoints/secrets/runs và WIP đều excluded.
+- Reference ZIP được kiểm trực tiếp: 9 Python source members, không có dataset/weights/checkpoints. Historical Table 6 giữ nguyên đủ 21 paper rows; campaign hiện tại chỉ 22 encoder configs/70 successful runs, benchmark actual 0.
+
+## Release checks và bàn giao SHA
+
+Chưa ghi SHA trước khi commit vì không dùng hash tự tham chiếu. Phần này sẽ được cập nhật sau clone sạch/install/CLI/CPU pipeline/CI, chỉ trên đúng committed execution bytes. `reports/integration/gates.json/input_snapshot.json` và handoff 06 trong release là audit cũ trước fix, không được trình bày như release gate mới.
+
+## Blockers / inputs tiếp theo
+
+- I06-01: đang tạo full encoder commit đủ implementation/config/manifests/tests/integration từ READY allowlist.
+- Colab GPU/JDK/Drive/quota/VRAM/pretrained bin load/P0 backward/resume/sync: **PENDING**, không được suy ra từ CPU guard/fixtures. 07 cung cấp runtime output; 06 review gates thật trước full training.
+- Dataset manifest digest `ea127f55e840991e53569379a9b3e8ac00bc6798108d6472f8ab300a109f8f7d`: pinned GitHub alternative revision, chưa chứng minh exact HF/paper equivalence. Không thay manifests/22 configs để che giới hạn.
+- Không chờ LLM, không full train, không tạo/nhắn chat/subagent, không sửa gates của 06.
+
+---
+
+## Historical infrastructure handoff — 11/10/2026
+
+Các mục bên dưới lưu kết quả thời điểm chỉ có infrastructure, không phải trạng thái release mới.
+
 # Module 04 — Repo, môi trường và GitHub
 
 Status: PARTIAL

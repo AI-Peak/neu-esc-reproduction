@@ -1,0 +1,95 @@
+{
+  "full_weights_loaded": false,
+  "backbones": {
+    "mbert": {
+      "access_verified": true,
+      "http_status": 206,
+      "model_id": "google-bert/bert-base-multilingual-uncased",
+      "revision": "7cbf9a625e29989f6b9c6c2fa68234c304f7e38f",
+      "filename": "model.safetensors",
+      "consumed_bytes": 16,
+      "repository_file_metadata": {
+        "rfilename": "model.safetensors",
+        "blobId": "4552308e038715f59fb6e54ed442414077f94662",
+        "size": 672247920,
+        "lfs": {
+          "sha256": "b33adb2b700b7029a64a4a14ddec6bda8555d2ca879e80a75789fd9542a6290e",
+          "size": 672247920,
+          "pointerSize": 134
+        }
+      }
+    },
+    "velectra": {
+      "access_verified": true,
+      "http_status": 206,
+      "model_id": "FPTAI/velectra-base-discriminator-cased",
+      "revision": "f594fee501933d92d8c13285c969495681d0cc00",
+      "filename": "pytorch_model.bin",
+      "consumed_bytes": 16,
+      "repository_file_metadata": {
+        "rfilename": "pytorch_model.bin",
+        "blobId": "9861ce2bcb621e5c084babe76b67e0123a02464e",
+        "size": 442685101,
+        "lfs": {
+          "sha256": "6f0734a57b0acf6005bb2604f249c30b1d179bf848bb5658c0e15a60b2c1a5b1",
+          "size": 442685101,
+          "pointerSize": 134
+        }
+      }
+    },
+    "xlm_r": {
+      "access_verified": true,
+      "http_status": 206,
+      "model_id": "FacebookAI/xlm-roberta-base",
+      "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
+      "filename": "model.safetensors",
+      "consumed_bytes": 16,
+      "repository_file_metadata": {
+        "rfilename": "model.safetensors",
+        "blobId": "f3991a50b968d7be273e3307266e6a6ad9e1d539",
+        "size": 1115567652,
+        "lfs": {
+          "sha256": "6fd4797bc397c3b8b55d6bb5740366b57e6a3ce91c04c77f22aafc0c128e6feb",
+          "size": 1115567652,
+          "pointerSize": 135
+        }
+      }
+    },
+    "visobert": {
+      "access_verified": true,
+      "http_status": 206,
+      "model_id": "uitnlp/visobert",
+      "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+      "filename": "pytorch_model.bin",
+      "consumed_bytes": 16,
+      "repository_file_metadata": {
+        "rfilename": "pytorch_model.bin",
+        "blobId": "56cbd951f9b9a058ae92b3ea0d68080afd6506f7",
+        "size": 390403641,
+        "lfs": {
+          "sha256": "8ef3c6d188b41f4d39c2eb443e4019927ed861cfa2307557479ccee674dddd6d",
+          "size": 390403641,
+          "pointerSize": 134
+        }
+      }
+    },
+    "phobert": {
+      "access_verified": true,
+      "http_status": 206,
+      "model_id": "vinai/phobert-base-v2",
+      "revision": "86cd7fd4c148980922ac11a2cf5e257f2ba639e1",
+      "filename": "pytorch_model.bin",
+      "consumed_bytes": 16,
+      "repository_file_metadata": {
+        "rfilename": "pytorch_model.bin",
+        "blobId": "982d740a5468cd5a68b6a3a9fa963813808a07f8",
+        "size": 540322347,
+        "lfs": {
+          "sha256": "7ba09eb4c244a5b3a49ad76d52d129ac085b61f5c6287de7f99508b02be589f9",
+          "size": 540322347,
+          "pointerSize": 134
+        }
+      }
+    }
+  }
+}

@@ -11,9 +11,17 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 *.lock text eol=lf
+*.txt text eol=lf
 *.sh text eol=lf
 *.ps1 text eol=crlf
 *.ipynb text eol=lf
 *.png binary
 *.jpg binary
 *.pdf binary
+# Module 03 handed off these exact CRLF bytes with verification hashes.
+reports/reference/figure3_audit.json -text whitespace=cr-at-eol
+reports/reference/figure3_audit.md -text whitespace=cr-at-eol
+# Frozen upstream audit copies retain their original cosmetic whitespace/hash.
+reports/method/reference/*.py whitespace=-blank-at-eol,-blank-at-eof
+# Preserve the evaluator owner's exact READY bytes (one empty line at EOF).
+src/neu_esc/evaluation/__init__.py whitespace=-blank-at-eof

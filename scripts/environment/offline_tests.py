@@ -1,4 +1,4 @@
-"""Run CPU fixtures offline; never import GPU/network/paid/data-marked test modules."""
+"""Run CPU fixtures offline; exclude externally marked modules and test cases."""
 
 from __future__ import annotations
 
@@ -15,10 +15,20 @@ BLOCKED_MARKERS = {"gpu", "network", "paid_api", "dataset"}
 
 def has_external_marker(path: Path) -> bool:
     tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and node.attr in BLOCKED_MARKERS:
-            if isinstance(node.value, ast.Attribute) and node.value.attr == "mark":
-                return True
+    # Only a module-level pytestmark suppresses import of the whole file.
+    # Function/class markers are filtered by pytest so mixed files retain CPU cases.
+    for statement in tree.body:
+        if not isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in targets):
+            continue
+        if statement.value is None:
+            continue
+        for node in ast.walk(statement.value):
+            if isinstance(node, ast.Attribute) and node.attr in BLOCKED_MARKERS:
+                if isinstance(node.value, ast.Attribute) and node.value.attr == "mark":
+                    return True
     return False
 
 
