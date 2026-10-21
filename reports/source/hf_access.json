@@ -1,7 +1,0 @@
-{
-  "url": "https://huggingface.co/datasets/hung20gg/NEU-ESC/resolve/daf543ad1992153cd2be9fec3cb59aa0fc714147/README.md",
-  "http_status": 200,
-  "authentication": "unauthenticated",
-  "sha256": "50305717b3b475bb808d212b96807d14d21cd4549ff37504f3ee6a5a1c429717",
-  "note": "README accessible; gated CSV access was tested separately in hf_csv_access.json"
-}

@@ -40,6 +40,9 @@ __pycache__/
 *.jar
 
 # Secrets and authentication artifacts
+# Kaggle API tokens for the team's accounts (kaggle/account_*/kaggle.json)
+kaggle.json
+/kaggle/account_*/
 .env
 .env.*
 *.pem
@@ -56,6 +59,9 @@ secrets.json
 /.config/
 .git-credentials
 .netrc
+
+# Papers/proposals stay outside the repo (copyright unclear; originals live in the parent folder)
+*.pdf
 
 # Machine-specific notebooks/editors/temp output
 .ipynb_checkpoints/

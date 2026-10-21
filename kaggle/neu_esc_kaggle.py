@@ -1,0 +1,613 @@
+"""Lean NEU-ESC reproduction runner for Kaggle T4, following the authors' public code.
+
+Reference: hung20gg/multi-task-bert @ b5637cc0 (copies in reports/method/reference/).
+Deliberate deviations from that code, all recorded in each run's config.json:
+  - fp16 autocast + GradScaler (T4 has no bf16; the authors trained in fp32).
+  - Batch 128 is split into micro-batches with gradient accumulation, padded per micro-batch.
+  - SMART skips the authors' first perturbed forward: its noise gradient is always None
+    because `.long()` cuts the graph, so that forward never changes the result.
+  - MTL selection uses the best mean validation macro-F1 over both tasks; the authors saved
+    every epoch from 4 on and picked one by hand.
+No checkpoints are written: the best weights stay in CPU RAM; each run saves logits, predictions
+keyed by sample ID, metrics, and the SHA-256 of this file.
+
+Subcommands:
+  fetch     download the authors' CSV splits and check SHA-256
+  prefetch  download pinned model/tokenizer revisions into the HF cache
+  train     one run: --backbone {phobert,visobert} --setup {st_sentiment,st_topic,mtl,mtl_smart} --seed N
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import math
+import os
+import platform
+import random
+import subprocess
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+import numpy as np
+
+# Kaggle images ship TensorFlow; keep transformers on PyTorch only. PhoBERT's pinned revision
+# has only pytorch_model.bin, and without this flag transformers fetches a safetensors copy from
+# an auto-conversion PR branch, which is a different revision than the pinned one.
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
+
+AUTHOR_COMMIT = "b5637cc0a8a7b5e88e794d180c11902405548eb5"
+DATA_URL = f"https://raw.githubusercontent.com/hung20gg/multi-task-bert/{AUTHOR_COMMIT}/dataset/{{name}}"
+# Hashes from reports/source/download_ledger.json.
+DATA_FILES = {
+    "train_set.csv": "8a18a73ca21105e0b424829cc41395719be98dd7f01bf3d962eca86e7a1501ec",
+    "val_set.csv": "0b2567fe5374cf9b8d22de92ce71d3f9bfa036dffac46fa6f7a5650e85c81169",
+    "test_set.csv": "cdd81b2c7b96752f9f45d05e231682fcd6c380f40273dac521425ceff71ab312",
+    "train_set_processed.csv": "7ca23b39e8e917de5c81745b0be2f4bb0e085fdc6173882479ecb2ed8e9ebe96",
+    "val_set_processed.csv": "948578e4b92df56117fd38d8edaee8d98f11adbd38611d6faee655008adea626",
+    "test_set_processed.csv": "bf850a67db6f9dd48df2adc5aa181e63e052e526361a1e9f0e6179bf582dc2e4",
+}
+SPLIT_SIZES = {"train": 23048, "val": 3305, "test": 6613}
+NUM_LABELS = {"sentiment": 4, "topic": 10}
+TASKS = ("sentiment", "topic")
+
+# Revisions pinned on 2026-10-11 (docs/FINDINGS.md). PhoBERT reads the authors' pre-segmented CSVs,
+# exactly as train.py / trainmultihead.py do for any model name containing "vinai".
+BACKBONES = {
+    "phobert": {"model_id": "vinai/phobert-base-v2",
+                "revision": "86cd7fd4c148980922ac11a2cf5e257f2ba639e1", "processed": True},
+    "visobert": {"model_id": "uitnlp/visobert",
+                 "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a", "processed": False},
+}
+
+# Hyperparameters from trainer/base_trainer.py + train.py (ST) and
+# Trainer/head_trainer.py + trainmultihead.py (MTL).
+SETUPS = {
+    "st_sentiment": {"tasks": ("sentiment",), "epochs": 15, "adam_eps": 1e-8, "lr_end": 0.2,
+                     "patience": 4, "smart": False, "micro_batch": 64},
+    "st_topic": {"tasks": ("topic",), "epochs": 15, "adam_eps": 1e-8, "lr_end": 0.2,
+                 "patience": 4, "smart": False, "micro_batch": 64},
+    "mtl": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.1,
+            "patience": None, "smart": False, "micro_batch": 64},
+    "mtl_smart": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.1,
+                  "patience": None, "smart": True, "micro_batch": 32},
+}
+COMMON = {"lr": 2e-5, "weight_decay": 0.01, "batch_size": 128, "max_length": 128,
+          "eval_batch_size": 128, "mtl_task_weight": 0.5}
+# utils/loss_function.py SMARTLoss defaults as used by head_trainer (weight 0.02).
+SMART = {"weight": 0.02, "noise_var": 1e-5, "norm_eps": 1e-6, "num_steps": 1}
+
+
+def log(message):
+    print(f"[{time.strftime('%H:%M:%S')}] {message}", flush=True)
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def code_provenance():
+    """Hash of this file (the only code that changes results) and the git commit when there is one.
+
+    Runs copied in from a Kaggle Dataset have no git metadata; runner_sha256 still identifies them.
+    """
+    here = Path(__file__).resolve()
+    info = {"runner_sha256": sha256_file(here), "git_commit": None, "git_dirty": None}
+    try:
+        def git(*args):
+            return subprocess.run(["git", "-C", str(here.parent), *args],
+                                  capture_output=True, text=True, timeout=10)
+        head = git("rev-parse", "HEAD")
+        if head.returncode == 0:
+            info["git_commit"] = head.stdout.strip()
+            # Untracked or modified runner counts as dirty: the commit alone does not identify it.
+            info["git_dirty"] = bool(git("status", "--porcelain", "--", str(here)).stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return info
+
+
+# ---------------------------------------------------------------- data
+
+def fetch_data(data_dir):
+    data_dir = Path(data_dir)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for name, expected in DATA_FILES.items():
+        target = data_dir / name
+        if not target.exists() or sha256_file(target) != expected:
+            log(f"download {name}")
+            urllib.request.urlretrieve(DATA_URL.format(name=name), target)
+        actual = sha256_file(target)
+        if actual != expected:
+            raise RuntimeError(f"SHA-256 mismatch for {name}: {actual}")
+    log(f"data OK in {data_dir}")
+
+
+def load_split(data_dir, split, processed):
+    import pandas as pd
+    name = f"{split}_set{'_processed' if processed else ''}.csv"
+    path = Path(data_dir) / name
+    if sha256_file(path) != DATA_FILES[name]:
+        raise RuntimeError(f"{path} does not match the pinned author CSV; run fetch")
+    frame = pd.read_csv(path)
+    labels = {}
+    for task, column in (("sentiment", "sentiment"), ("topic", "classification")):
+        values = frame[column].to_numpy(dtype=float)
+        if not np.all(np.isfinite(values)) or not np.all(values == np.round(values)):
+            raise ValueError(f"{name}: non-integer {column} labels")
+        labels[task] = values.astype(np.int64)
+        if labels[task].min() < 0 or labels[task].max() >= NUM_LABELS[task]:
+            raise ValueError(f"{name}: {column} label out of range")
+    texts = frame["text"].astype(str).tolist()
+    if len(texts) != SPLIT_SIZES[split]:
+        raise ValueError(f"{name}: expected {SPLIT_SIZES[split]} rows, got {len(texts)}")
+    return texts, labels, name
+
+
+def sample_ids(split, count):
+    """IDs in the format of the repo's data pipeline (docs/FINDINGS.md), e.g. test:000000:cdd81b2c7b96:
+    split, zero-based CSV row, then the raw CSV's SHA-256 prefix. The authors' _processed.csv files are
+    row-aligned with the raw ones, so PhoBERT and ViSoBERT runs share the same IDs."""
+    prefix = DATA_FILES[f"{split}_set.csv"][:12]
+    name = "validation" if split == "val" else split
+    return np.array([f"{name}:{row:06d}:{prefix}" for row in range(count)])
+
+
+def encode_texts(tokenizer, texts, max_length):
+    # Same call shape as utils/dataloader.py (special tokens, truncation at 128), but without
+    # padding: each micro-batch is padded to its own longest row. Logits do not change because
+    # padded positions are masked out of attention.
+    encoded = tokenizer(texts, add_special_tokens=True, truncation=True, max_length=max_length)
+    return [np.asarray(ids, dtype=np.int64) for ids in encoded["input_ids"]]
+
+
+def collate(sequences, indices, pad_id):
+    import torch
+    width = max(len(sequences[i]) for i in indices)
+    ids = torch.full((len(indices), width), pad_id, dtype=torch.long)
+    mask = torch.zeros((len(indices), width), dtype=torch.long)
+    for row, index in enumerate(indices):
+        seq = sequences[index]
+        ids[row, :len(seq)] = torch.from_numpy(seq)
+        mask[row, :len(seq)] = 1
+    return ids, mask
+
+
+# ---------------------------------------------------------------- model
+
+def build_model(backbone_cfg, setup_cfg, model_path):
+    import torch
+    from torch import nn
+    from transformers import AutoModel, AutoModelForSequenceClassification
+
+    source = model_path or backbone_cfg["model_id"]
+    kwargs = {"output_loading_info": True}
+    if not model_path:
+        kwargs["revision"] = backbone_cfg["revision"]
+    tasks = setup_cfg["tasks"]
+
+    if len(tasks) == 1:
+        encoder, info = AutoModelForSequenceClassification.from_pretrained(
+            source, num_labels=NUM_LABELS[tasks[0]], **kwargs)
+
+        class SingleTask(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.encoder = encoder
+
+            def forward(self, input_ids, attention_mask):
+                return (self.encoder(input_ids=input_ids, attention_mask=attention_mask).logits,)
+
+        return SingleTask(), info
+
+    encoder, info = AutoModel.from_pretrained(source, **kwargs)
+    hidden = encoder.config.hidden_size
+
+    class Linear2Head(nn.Module):
+        """architecture/bert2head/model.py: BertLinear2HEAD. Its Dropout(0.2) layers are
+        declared but never called in forward, so they are left out here."""
+
+        def __init__(self):
+            super().__init__()
+            self.encoder = encoder
+            self.fc_input = nn.Linear(hidden, hidden)
+            self.activation = nn.SiLU()
+            self.ln1 = nn.LayerNorm(hidden)
+            self.out_sent = nn.Linear(hidden, NUM_LABELS["sentiment"])
+            self.out_clas = nn.Linear(hidden, NUM_LABELS["topic"])
+
+        def forward(self, input_ids, attention_mask):
+            cls = self.encoder(input_ids=input_ids,
+                               attention_mask=attention_mask).last_hidden_state[:, 0, :]
+            embedded = self.ln1(self.activation(self.fc_input(cls)))
+            return self.out_sent(embedded), self.out_clas(embedded)
+
+    return Linear2Head(), info
+
+
+def sym_kl_sum(perturbed, clean):
+    """utils/loss_function.py sym_kl_loss(input=perturbed, target=clean, reduction='sum')."""
+    import torch.nn.functional as F
+    perturbed, clean = perturbed.float(), clean.float()
+    return (F.kl_div(F.log_softmax(perturbed, dim=-1), F.softmax(clean.detach(), dim=-1),
+                     reduction="sum")
+            + F.kl_div(F.log_softmax(clean, dim=-1), F.softmax(perturbed.detach(), dim=-1),
+                       reduction="sum"))
+
+
+def author_smart_ids(input_ids):
+    """Perturbed IDs exactly as the authors' SMARTLoss produces them for num_steps=1.
+
+    The noise is added to integer token IDs and cast back with `.long()`, so its gradient is
+    None and the ascent step reduces to `noise / (inf_norm(noise) + eps)`. Values in (-1, 0)
+    truncate to id - 1, which shifts about half of the tokens to the previous vocabulary ID.
+    """
+    import torch
+    noise = torch.randn(input_ids.shape, device=input_ids.device) * SMART["noise_var"]
+    noise = noise / (noise.abs().amax(dim=-1, keepdim=True) + SMART["norm_eps"])
+    return (input_ids + noise).long()
+
+
+# ---------------------------------------------------------------- metrics
+
+def task_metrics(y_true, logits):
+    from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+    y_pred = logits.argmax(axis=-1)
+    labels = list(range(logits.shape[-1]))
+    return {
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "macro_f1": float(f1_score(y_true, y_pred, average="macro")),
+        "weighted_f1": float(f1_score(y_true, y_pred, average="weighted")),
+        # Trainer/head_trainer.py calls f1_score(pred, true): weighted F1 then uses predicted
+        # supports. Accuracy and macro-F1 are symmetric, so only this one differs.
+        "weighted_f1_author_mtl": float(f1_score(y_pred, y_true, average="weighted")),
+        "per_class_f1": [float(x) for x in f1_score(y_true, y_pred, average=None, labels=labels,
+                                                    zero_division=0)],
+        "confusion_matrix": confusion_matrix(y_true, y_pred, labels=labels).tolist(),
+    }
+
+
+def predict(model, sequences, pad_id, device, batch_size, use_amp):
+    import torch
+    order = sorted(range(len(sequences)), key=lambda i: len(sequences[i]))
+    outputs = None
+    model.eval()
+    with torch.no_grad():
+        for start in range(0, len(order), batch_size):
+            chunk = order[start:start + batch_size]
+            ids, mask = collate(sequences, chunk, pad_id)
+            with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
+                logits = model(ids.to(device), mask.to(device))
+            if outputs is None:
+                outputs = [np.zeros((len(sequences), head.shape[-1]), dtype=np.float32) for head in logits]
+            for out, value in zip(outputs, logits):
+                out[chunk] = value.float().cpu().numpy()
+    model.train()
+    return outputs
+
+
+# ---------------------------------------------------------------- training
+
+def seed_everything(seed):
+    import torch
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+
+def environment(device):
+    import torch
+    import transformers
+    import sklearn
+    env = {"python": sys.version.split()[0], "platform": platform.platform(),
+           "torch": torch.__version__, "transformers": transformers.__version__,
+           "sklearn": sklearn.__version__, "cuda": torch.version.cuda, "device": device.type,
+           "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None,
+           "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES")}
+    try:
+        import sentencepiece
+        env["sentencepiece"] = sentencepiece.__version__
+    except ImportError:
+        env["sentencepiece"] = None
+    return env
+
+
+def write_json(path, payload):
+    tmp = Path(str(path) + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def train(args):
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoTokenizer
+
+    backbone = BACKBONES[args.backbone]
+    setup = dict(SETUPS[args.setup])
+    if args.epochs is not None:
+        setup["epochs"] = args.epochs
+    micro_batch = args.micro_batch or setup["micro_batch"]
+    if COMMON["batch_size"] % micro_batch:
+        raise ValueError("--micro-batch must divide 128")
+    tasks = setup["tasks"]
+    debug = bool(args.max_steps_per_epoch or args.limit_eval or args.epochs is not None
+                 or args.model_path or args.fp32)
+
+    run_name = f"{args.backbone}-{args.setup}-s{args.seed}"
+    run_dir = Path(args.out_dir) / run_name
+    metrics_path = run_dir / "metrics.json"
+    if metrics_path.exists() and not args.force:
+        status = json.loads(metrics_path.read_text(encoding="utf-8")).get("status")
+        if status == "COMPLETED":
+            log(f"{run_name} already COMPLETED, skipping (use --force to rerun)")
+            return 0
+    run_dir.mkdir(parents=True, exist_ok=True)
+    for stale in ("epochs.jsonl", "metrics.json", "logits.npz", "predictions.csv"):
+        (run_dir / stale).unlink(missing_ok=True)
+    code = code_provenance()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    use_amp = device.type == "cuda" and not args.fp32
+    seed_everything(args.seed)
+
+    # ---- data
+    processed = backbone["processed"]
+    data = {split: load_split(args.data_dir, split, processed) for split in ("train", "val", "test")}
+    token_source = args.model_path or backbone["model_id"]
+    token_kwargs = {} if args.model_path else {"revision": backbone["revision"]}
+    tokenizer = AutoTokenizer.from_pretrained(token_source, use_fast=False, **token_kwargs)
+    pad_id = tokenizer.pad_token_id
+    started = time.perf_counter()
+    sequences = {split: encode_texts(tokenizer, data[split][0], COMMON["max_length"]) for split in data}
+    tokenize_seconds = time.perf_counter() - started
+    labels = {split: data[split][1] for split in data}
+    eval_index = {}
+    for split in ("val", "test"):
+        keep = list(range(len(sequences[split])))
+        if args.limit_eval:
+            keep = keep[:args.limit_eval]
+        eval_index[split] = keep
+    eval_ids = {split: sample_ids(split, len(sequences[split]))[eval_index[split]] for split in eval_index}
+    lengths = np.array([len(s) for s in sequences["train"]])
+    log(f"{run_name}: tokenized in {tokenize_seconds:.0f}s, train tokens mean {lengths.mean():.1f}, "
+        f"truncated {(lengths >= COMMON['max_length']).mean():.1%}")
+
+    # ---- model and optimizer (AdamW defaults otherwise: betas 0.9/0.999, weight_decay 0.01)
+    model, loading_info = build_model(backbone, setup, args.model_path)
+    model.to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=COMMON["lr"], eps=setup["adam_eps"],
+                                  weight_decay=COMMON["weight_decay"])
+    scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0,
+                                                  end_factor=setup["lr_end"],
+                                                  total_iters=setup["epochs"])
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+
+    config = {
+        "run_name": run_name, "backbone": args.backbone, "setup": args.setup, "seed": args.seed,
+        "code": code, "model_id": backbone["model_id"], "revision": None if args.model_path else backbone["revision"],
+        "model_path_override": args.model_path, "text_source": "author _processed.csv" if processed
+        else "author raw .csv", "data_files": {data[s][2]: DATA_FILES[data[s][2]] for s in data},
+        "tasks": list(tasks), "epochs": setup["epochs"], "adam_eps": setup["adam_eps"],
+        "lr_end_factor": setup["lr_end"], "early_stopping_patience": setup["patience"],
+        "smart": SMART if setup["smart"] else None, **COMMON, "micro_batch": micro_batch,
+        "precision": "fp16_autocast" if use_amp else "fp32",
+        "selection": "val macro-F1" if len(tasks) == 1 else "mean val macro-F1 over both tasks",
+        "max_steps_per_epoch": args.max_steps_per_epoch, "limit_eval": args.limit_eval,
+        "benchmark_eligible": not debug, "environment": environment(device),
+        "loading_info": {k: [str(x) for x in v] for k, v in loading_info.items()},
+        "tokenize_seconds": tokenize_seconds,
+    }
+    write_json(run_dir / "config.json", config)
+
+    # ---- loop
+    task_columns = {task: torch.from_numpy(labels["train"][task]) for task in tasks}
+    n_train = len(sequences["train"])
+    generator = torch.Generator().manual_seed(args.seed)
+    best = {"score": -math.inf, "epoch": None, "state": None, "val_logits": None}
+    val_history = {task: [] for task in tasks}
+    test_history = {task: [] for task in tasks}
+    epochs_without_gain = 0
+    step_times = []
+    status = "COMPLETED"
+
+    def evaluate(split):
+        keep = eval_index[split]
+        logits = predict(model, [sequences[split][i] for i in keep], pad_id, device,
+                         COMMON["eval_batch_size"], use_amp)
+        result = {task: task_metrics(labels[split][task][keep], logits[k])
+                  for k, task in enumerate(tasks)}
+        return logits, result
+
+    model.train()
+    for epoch in range(1, setup["epochs"] + 1):
+        if device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(device)
+        epoch_start = time.perf_counter()
+        order = torch.randperm(n_train, generator=generator).tolist()
+        batches = [order[i:i + COMMON["batch_size"]] for i in range(0, n_train, COMMON["batch_size"])]
+        if args.max_steps_per_epoch:
+            batches = batches[:args.max_steps_per_epoch]
+        loss_sum = 0.0
+        for step, batch in enumerate(batches, start=1):
+            step_start = time.perf_counter()
+            optimizer.zero_grad(set_to_none=True)
+            batch_loss = 0.0
+            for m in range(0, len(batch), micro_batch):
+                chunk = batch[m:m + micro_batch]
+                share = len(chunk) / len(batch)
+                ids, mask = collate(sequences["train"], chunk, pad_id)
+                ids, mask = ids.to(device), mask.to(device)
+                targets = [task_columns[task][chunk].to(device) for task in tasks]
+                with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
+                    outputs = model(ids, mask)
+                    if len(tasks) == 1:
+                        # base_trainer.py: CrossEntropyLoss (mean) over the 128-row batch.
+                        loss = F.cross_entropy(outputs[0].float(), targets[0]) * share
+                    else:
+                        # head_trainer.py: loss_i = CE_i + 0.02 * SMART_i, then 0.5/0.5.
+                        # CE is a batch mean, so it is scaled by this micro-batch's share;
+                        # sym-KL uses reduction='sum', so micro-batch sums add up unscaled.
+                        loss = 0.0
+                        for k, task in enumerate(tasks):
+                            task_loss = F.cross_entropy(outputs[k].float(), targets[k]) * share
+                            if setup["smart"]:
+                                # The authors draw independent noise for each task's call.
+                                perturbed = model(author_smart_ids(ids), mask)[k]
+                                task_loss = task_loss + SMART["weight"] * sym_kl_sum(perturbed, outputs[k])
+                            loss = loss + COMMON["mtl_task_weight"] * task_loss
+                scaler.scale(loss).backward()
+                batch_loss += float(loss.detach())
+            scaler.step(optimizer)
+            scaler.update()
+            loss_sum += batch_loss
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            step_times.append(time.perf_counter() - step_start)
+            if step % 50 == 0:
+                log(f"{run_name} epoch {epoch} step {step}/{len(batches)} loss {batch_loss:.4f}")
+        train_seconds = time.perf_counter() - epoch_start
+        scheduler.step()  # base_trainer / head_trainer step LinearLR once per epoch
+
+        eval_start = time.perf_counter()
+        val_logits, val_metrics = evaluate("val")
+        val_seconds = time.perf_counter() - eval_start
+        for k, task in enumerate(tasks):
+            val_history[task].append(val_logits[k])
+        score = float(np.mean([val_metrics[t]["macro_f1"] for t in tasks]))
+        record = {"epoch": epoch, "train_loss": loss_sum / len(batches), "steps": len(batches),
+                  "lr_next": optimizer.param_groups[0]["lr"], "train_seconds": train_seconds,
+                  "val_seconds": val_seconds, "selection_score": score,
+                  "val": {t: {k: v for k, v in val_metrics[t].items() if k != "confusion_matrix"}
+                          for t in tasks},
+                  "peak_vram_gb": torch.cuda.max_memory_allocated(device) / 2**30
+                  if device.type == "cuda" else None}
+        if args.test_every_epoch:
+            test_logits, test_metrics = evaluate("test")
+            for k, task in enumerate(tasks):
+                test_history[task].append(test_logits[k])
+            record["test"] = {t: {k: v for k, v in test_metrics[t].items() if k != "confusion_matrix"}
+                              for t in tasks}
+        with open(run_dir / "epochs.jsonl", "a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+        summary = " ".join(f"{t}: acc {val_metrics[t]['accuracy']:.4f} mF1 {val_metrics[t]['macro_f1']:.4f}"
+                           for t in tasks)
+        log(f"{run_name} epoch {epoch}/{setup['epochs']} train {train_seconds:.0f}s "
+            f"val {val_seconds:.0f}s | {summary}")
+
+        # base_trainer.py keeps a checkpoint only when the metric strictly improves.
+        if score > best["score"]:
+            best.update(score=score, epoch=epoch, val_logits=val_logits,
+                        state={k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()})
+            epochs_without_gain = 0
+        else:
+            epochs_without_gain += 1
+            if setup["patience"] and epochs_without_gain >= setup["patience"]:
+                log(f"{run_name}: early stop after epoch {epoch} (patience {setup['patience']})")
+                break
+
+    # ---- test with the selected weights
+    model.load_state_dict(best["state"])
+    test_start = time.perf_counter()
+    test_logits, test_metrics = evaluate("test")
+    test_seconds = time.perf_counter() - test_start
+    val_metrics = {t: task_metrics(labels["val"][t][eval_index["val"]], best["val_logits"][k])
+                   for k, t in enumerate(tasks)}
+
+    arrays = {"val_ids": eval_ids["val"], "test_ids": eval_ids["test"]}
+    for k, task in enumerate(tasks):
+        arrays[f"val_{task}"] = best["val_logits"][k]
+        arrays[f"test_{task}"] = test_logits[k]
+        arrays[f"val_labels_{task}"] = labels["val"][task][eval_index["val"]]
+        arrays[f"test_labels_{task}"] = labels["test"][task][eval_index["test"]]
+        arrays[f"val_by_epoch_{task}"] = np.stack(val_history[task])
+        if test_history[task]:
+            arrays[f"test_by_epoch_{task}"] = np.stack(test_history[task])
+    np.savez_compressed(run_dir / "logits.npz", **arrays)
+
+    # The selected epoch's predictions keyed by sample ID; logits.npz holds the same rows in the same order.
+    with open(run_dir / "predictions.csv", "w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(["sample_id", "split"] + [f"{t}_{kind}" for t in tasks for kind in ("true", "pred")])
+        for split, logits in (("val", best["val_logits"]), ("test", test_logits)):
+            for row, sample_id in enumerate(eval_ids[split]):
+                cells = []
+                for k, task in enumerate(tasks):
+                    cells += [int(labels[split][task][eval_index[split][row]]), int(logits[k][row].argmax())]
+                writer.writerow([sample_id, split] + cells)
+
+    times = np.array(step_times[3:] or step_times)
+    steps_full_epoch = math.ceil(n_train / COMMON["batch_size"])
+    write_json(metrics_path, {
+        "status": status, "run_name": run_name, "benchmark_eligible": not debug,
+        "runner_sha256": code["runner_sha256"], "best_epoch": best["epoch"], "epochs_run": len(val_history[tasks[0]]),
+        "selection_score": best["score"], "val": val_metrics, "test": test_metrics,
+        "timing": {"step_seconds_mean": float(times.mean()), "step_seconds_median": float(np.median(times)),
+                   "steps_timed": int(len(times)),
+                   "projected_train_epoch_seconds": float(times.mean() * steps_full_epoch),
+                   "test_seconds": test_seconds,
+                   "wall_seconds": time.perf_counter() - started},
+    })
+    log(f"{run_name}: best epoch {best['epoch']} | " + " ".join(
+        f"test {t}: acc {test_metrics[t]['accuracy']:.4f} mF1 {test_metrics[t]['macro_f1']:.4f}"
+        for t in tasks))
+    return 0
+
+
+def prefetch(args):
+    from transformers import AutoModel, AutoTokenizer
+    for name in args.backbones:
+        backbone = BACKBONES[name]
+        AutoTokenizer.from_pretrained(backbone["model_id"], revision=backbone["revision"], use_fast=False)
+        AutoModel.from_pretrained(backbone["model_id"], revision=backbone["revision"])
+        log(f"cached {backbone['model_id']}@{backbone['revision'][:8]}")
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_fetch = sub.add_parser("fetch", help="download and verify the authors' CSV splits")
+    p_fetch.add_argument("--data-dir", required=True)
+
+    p_prefetch = sub.add_parser("prefetch", help="cache pinned models/tokenizers")
+    p_prefetch.add_argument("--backbones", nargs="+", default=list(BACKBONES), choices=list(BACKBONES))
+
+    p_train = sub.add_parser("train", help="run one backbone/setup/seed")
+    p_train.add_argument("--backbone", required=True, choices=list(BACKBONES))
+    p_train.add_argument("--setup", required=True, choices=list(SETUPS))
+    p_train.add_argument("--seed", required=True, type=int)
+    p_train.add_argument("--data-dir", required=True)
+    p_train.add_argument("--out-dir", required=True)
+    p_train.add_argument("--micro-batch", type=int, help="default 64, or 32 for mtl_smart")
+    p_train.add_argument("--test-every-epoch", action="store_true",
+                         help="also save test logits each epoch (post-hoc analysis only; never select on test)")
+    p_train.add_argument("--force", action="store_true", help="rerun even if metrics.json is COMPLETED")
+    debug = p_train.add_argument_group("smoke/debug (marks the run benchmark_eligible=false)")
+    debug.add_argument("--epochs", type=int)
+    debug.add_argument("--max-steps-per-epoch", type=int)
+    debug.add_argument("--limit-eval", type=int)
+    debug.add_argument("--model-path", help="local model+tokenizer dir instead of the pinned HF revision")
+    debug.add_argument("--fp32", action="store_true")
+
+    args = parser.parse_args(argv)
+    if args.command == "fetch":
+        fetch_data(args.data_dir)
+        return 0
+    if args.command == "prefetch":
+        return prefetch(args)
+    return train(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

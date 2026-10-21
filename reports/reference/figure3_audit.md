@@ -18,4 +18,4 @@ Các dấu in đậm và dấu * của Table 6 được lưu riêng trong `table
 
 Seed 42 được chọn trước cho CM tái lập so với Figure 3. CM mọi seed phải giữ lại; nếu cộng 5 seed đủ test thì N=33.065 mỗi task. Chưa có predictions benchmark trong module này.
 
-Tái tạo phép tính: `python -m neu_esc.evaluation.audit_reference --reference-dir reports/reference --pdf ../references/NEU-ESC-2506.23524.pdf` (cần pypdf).
+Phép tính được tạo bằng `neu_esc.evaluation.audit_reference` của pipeline cũ, nay đã gỡ khỏi repo (bản gốc ở commit `d626a86`). Có thể kiểm lại trực tiếp từ hai file `figure3_*_counts.csv`: accuracy = tổng đường chéo / tổng ma trận.

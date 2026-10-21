@@ -1,6 +1,0 @@
-{
-  "revision": "7b4a3e38cd316c14d4006fe0328d3e2d6f1edada",
-  "url": "https://raw.githubusercontent.com/VinAIResearch/PhoBERT/7b4a3e38cd316c14d4006fe0328d3e2d6f1edada/README.md",
-  "sha256": "e7d289d46e437fac348b696562e3a3c3031acaa499b3ffceb111546464d27f5a",
-  "use": "Current upstream rationale for chosen word segmenter; does not establish original NEU-ESC preprocessing"
-}

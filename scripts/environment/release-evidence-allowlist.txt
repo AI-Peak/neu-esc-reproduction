@@ -1,4 +1,0 @@
-docs/github.md
-handoffs/04-infrastructure.md
-scripts/environment/release-verification-20261012.json
-scripts/environment/release-evidence-allowlist.txt
