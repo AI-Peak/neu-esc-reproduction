@@ -11,7 +11,7 @@ Ngày kiểm tra 21/10/2026: 91 notebook files, 21 embedded archives duy nhất 
 | v3.2, 5 run seed43 | Ứng viên tốt để làm bản tham khảo sau xử lý; 0 saved outputs | Storage owner email/folder ID trong SPEC và runner/specs, constants trong runner/storage.py; historical run IDs; chưa có execution evidence trong audit |
 | v3.1, 4 PhoBERT seed42 | Ứng viên archive tham khảo sau xử lý; 0 saved outputs | Cùng loại binding storage/run cũ; preprocessing variant; final evidence còn thiếu |
 | direct-v2, 4 ViSoBERT W1–W4 | Cần xử lý nhiều thông tin vận hành hơn | Account email, thread/profile IDs, đường dẫn local, storage/resume bindings; bản source notebook không tự chứng minh byte từng chạy |
-| 6 notebook trong repo local | Campaign cũ, chỉ catalog trước | A100 preflight/pilot/full-run gates, T4 recovery/ownership; không promote chỉ vì đang ở thư mục notebooks |
+| Notebook campaign cũ trong workspace | Chỉ catalog trước | Không promote chỉ vì đang ở thư mục notebooks; cần xác minh run binding và mục đích từng bản |
 | Root notebooks và recovery/candidates | Archive local | Bản before-custom-oauth có 15 output items; có Drive links/metadata trong một số bản; tránh trùng lịch sử |
 
 Email/Drive IDs không đồng nghĩa là token đăng nhập. Vấn đề là chúng gắn notebook public vào tài khoản, storage và run của campaign cũ, không phù hợp làm cấu hình dùng chung cho người mới. Không in các giá trị đó vào catalog.

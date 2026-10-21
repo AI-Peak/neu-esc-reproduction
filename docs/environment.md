@@ -55,7 +55,7 @@ print(torch.cuda.get_device_name(0), torch.cuda.get_device_properties(0).total_m
 print("bf16_supported", torch.cuda.is_bf16_supported())
 ```
 
-Không có GPU thì dừng full train. Không tự cài CUDA/PyTorch mới để giả lập GPU. T4 dùng fp16 khi đã test; bf16 chỉ bật khi runtime và model smoke xác nhận hỗ trợ. Không suy loại GPU/quota từ tên Colab.
+Không có GPU thì dừng full train. Không tự cài CUDA/PyTorch mới để giả lập GPU. Chỉ bật precision phù hợp sau khi runtime và model smoke xác nhận hỗ trợ. Không suy loại GPU/quota từ tên Colab.
 
 2. Clone URL thật, checkout **full 40-character commit** mà 04 phát hành và 06 đã xác minh. Public repo hiện tại không cần token:
 

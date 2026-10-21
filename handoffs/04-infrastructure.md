@@ -166,4 +166,4 @@ Phần Colab dừng ở PREPARED vì chưa có runtime/output thật. Full train
 1. Module 01/02/03/05 giao dependency requests + file READY cụ thể/hashes trong handoff; 04 review/bổ sung SDK nếu có rồi stage allowlist tuần tự. Không nhắn chat khác nếu user chưa chỉ định.
 2. Module 06 kiểm tra clean release checkout đầy đủ, tests/gates và CLI interfaces trên commit SHA đó.
 3. Module 07 dùng recipe `docs/environment.md` trong notebook của mình: checkout commit cố định, user mở GPU/mount Drive, dry-run constrained install, verify/restart runtime khi cần, smoke và sync evidence. Gửi Python/PyTorch/CUDA/GPU/pip-check output, không gửi token.
-4. 04 xác minh lock GPU từ runtime thật và compatibility requests; 07 chạy full training sau gate, không fallback CPU. Không giả định T4/quota/bf16.
+4. 04 xác minh lock GPU từ runtime thật và compatibility requests; 07 chạy full training sau gate, không fallback CPU. Không giả định loại GPU, quota hoặc hỗ trợ bf16.

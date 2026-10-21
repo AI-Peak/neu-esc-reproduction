@@ -6,21 +6,20 @@ Cập nhật tài liệu: 21/10/2026. **Trạng thái khoa học lấy từ audi
 
 - Pipeline data/model/loss/training/evaluation, 22 experiment configs, CPU fixtures và môi trường khóa đã có trên repo. Release `caaa76228bde261fd33bba15e0c742d77967fdb2` có [CI CPU thành công](https://github.com/AI-Peak/neu-esc-reproduction/actions/runs/38214475551). Remote main kiểm ngày 21/10: `4abdfe3f078778bc2273ce99ee1495466ff4114e`.
 - Audit trước đã đối chiếu dữ liệu công khai: 32.966 mẫu, splits train 23.048 / validation 3.305 / test 6.613. Input PhoBERT dùng VnCoreNLP của nhóm vẫn khác author-processed CSV ở 9.630 mẫu.
-- Audit đã kiểm lại metrics từ saved predictions của **7 run**. Các kết quả được giữ với provenance và giới hạn, chưa gọi là tái lập chính xác Table 6.
+- Bảng tiến độ công khai giữ metrics đã kiểm từ saved predictions của **6 run**. Các kết quả được giữ với provenance và giới hạn, chưa gọi là tái lập chính xác Table 6.
 - Notebook và runtime adapters đã được tạo cho nhiều wave. Việc có notebook hoặc tên `release` không chứng minh run đã hoàn tất hay phương pháp được duyệt.
 
 ## Trạng thái theo nhóm run
 
 | Nhóm | Bằng chứng tại audit 20/10 | Cách đọc |
 |---|---|---|
-| ViSoBERT MTL+SMART seed 42 lịch sử 13/10 và T4 14/10 | 2 run có metrics được kiểm lại; T4 thiếu một phần logs/config final local | Giữ riêng, cùng seed nên không tính thành 2 seeds độc lập |
+| ViSoBERT MTL+SMART seed 42 lịch sử 13/10 | Có predictions/metrics được kiểm lại | Giữ như một cohort lịch sử riêng |
 | ViSoBERT MTL+SMART A100 seeds 43,44,45 | 3 run có predictions/metrics đã kiểm | Chỉ báo subgroup 3 seeds; chưa phải đủ 5 seeds |
 | ViSoBERT ST sentiment42, ST topic42 | 2 run có metrics/selection được kiểm | Giữ với nhãn implementation nhóm có điều chỉnh |
 | ViSoBERT MTL42 | Có completion receipt step 3620; thiếu final prediction bytes trong audit | Chưa xác minh metrics; không dùng snapshot RUNNING cũ làm trạng thái hiện tại |
 | ViSoBERT MTL+SMART46 | Có evidence tiến triển lịch sử, final chưa biết | Cần final artifacts; không suy là đang chạy hoặc đã thất bại |
 | 4 PhoBERT seed42 | Evidence khác nhau: handoff completion, recovery, training progress hoặc notebook intent | Chưa có đủ final predictions để xác minh; phải ghi preprocessing variant |
 | 5 notebook v3.2 seed43 | Đã có bản notebook bàn giao; actual execution chưa xác định trong audit | Không ghi completed chỉ vì notebook đã build |
-| T4 SMART43 bị retired | Hồ sơ ghi retired | Không đưa vào benchmark hoặc tự resume |
 | Smoke/pilot/fixture | Kiểm tra kỹ thuật | Không tính vào kết quả tái lập |
 
 Chi tiết từng run: [run-status-20261020.csv](../reports/progress/run-status-20261020.csv). Các nhãn PASS là kết luận của audit nguồn, không phải xác nhận mới ngày 21/10. Hash và nguồn: [source-provenance.json](../reports/progress/source-provenance.json). Full evidence còn do maintainer giữ; bảng CSV này không tự thay thế predictions/checkpoint/source bytes.

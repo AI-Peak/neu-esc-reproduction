@@ -61,7 +61,7 @@ Windows workspace dùng phát triển và phân tích. Colab clone commit cố �
 
 Module 04 sở hữu packaging/install recipe Colab; module 07 sở hữu `notebooks/colab_reproduce.ipynb`, queue và sync Drive. Notebook chỉ gọi CLI package. Module 02 implement checkpoint/resume đầy đủ (weights, optimizer, scheduler, scaler, RNG, epoch/step, sampler và batch position khi cần). Bổ sung `checkpoints/latest` bên cạnh `best`. Resume không đủ trạng thái phải bị từ chối hoặc restart seed với ledger rõ ràng.
 
-Module 07 sync metadata/logs/best/latest về Drive theo chu kỳ với checksum + completion marker; bản dang dở không được resume. Không chỉ lưu lúc kết thúc run. Train trên disk local, sync về Drive, restore về local trước resume. Mỗi runtime một job mặc định. Kiểm tra CUDA/VRAM/disk, đo throughput trước ETA. Không có GPU thì dừng full train; CPU smoke vẫn được. T4 không dùng bf16; chỉ bật khi kiểm tra hỗ trợ. Không giả định Colab cấp T4/quota cụ thể.
+Module 07 sync metadata/logs/best/latest về Drive theo chu kỳ với checksum + completion marker; bản dang dở không được resume. Không chỉ lưu lúc kết thúc run. Train trên disk local, sync về Drive, restore về local trước resume. Mỗi runtime một job mặc định. Kiểm tra CUDA/VRAM/disk, đo throughput trước ETA. Không có GPU thì dừng full train; CPU smoke vẫn được. Chỉ bật bf16 khi runtime và model smoke xác nhận hỗ trợ; không giả định loại GPU hoặc quota cụ thể.
 
 Secrets lấy qua Colab Secrets/environment, không ghi vào code/output/logs. Mount Drive, mở GPU và đăng nhập là thao tác của người dùng. Nếu không có công cụ truy cập Colab, bàn giao notebook + lệnh và chờ output người dùng; không tuyên bố đã chạy. Không mua gói, tăng ngân sách hoặc né giới hạn phiên tự động.
 
