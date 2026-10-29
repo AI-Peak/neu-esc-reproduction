@@ -1,6 +1,6 @@
 """Check that the runner's SMART matches the authors' SMARTLoss bit for bit (CPU, ~5 s).
 
-    python kaggle/check_author_smart.py
+    python src_baseline/check_author_smart.py
 
 Runs reports/method/reference/utils__loss_function.py SMARTLoss and the runner's
 author_smart_ids/sym_kl_sum on the same RNG stream, for both task branches.

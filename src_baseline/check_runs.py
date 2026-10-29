@@ -1,6 +1,6 @@
 """Technical acceptance of finished runs. Deliberately never compares scores with Table 6.
 
-    python kaggle/check_runs.py runs/ --seeds 42
+    python src_baseline/check_runs.py runs/ --seeds 42
 
 A run passes when it finished on the benchmark protocol, trained (finite loss that went down,
 validation macro-F1 above a constant majority-class predictor) and saved complete, unique

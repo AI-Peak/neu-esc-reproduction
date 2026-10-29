@@ -1,6 +1,6 @@
 """Summarise runs as mean +- std over seeds and compare with NEU-ESC Table 6.
 
-    python kaggle/aggregate.py runs/ other_account_runs/ --out results/
+    python src_baseline/aggregate.py runs/ other_account_runs/ --out results/
 
 Reads every */metrics.json under the given directories (several Kaggle sessions or accounts
 can be combined). Writes per_run.csv, summary.csv, gains.csv and summary.md.

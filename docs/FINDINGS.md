@@ -91,7 +91,7 @@ Paper không ghi hyperparameter. Các giá trị dưới đây lấy từ `train
 - Paper mô tả nhiễu nhỏ trên embedding. Code lại cộng nhiễu vào **token ID** rồi gọi `.long()` ([utils__loss_function.py:82](../reports/method/reference/utils__loss_function.py:82)).
 - Vì `.long()` cắt đồ thị tính toán, gradient theo nhiễu luôn là `None`; bước "adversarial" thực chất chỉ chuẩn hoá nhiễu ngẫu nhiên.
 - Hệ quả: khoảng 49% token bị đổi thành ID liền trước. Sau đó code tính sym-KL giữa dự đoán sạch và dự đoán trên input bị nhiễu, với `reduction='sum'` và hệ số 0.02. Gradient theo tham số model vẫn chảy qua lượt forward cuối.
-- Runner Kaggle tái tạo đúng hành vi này, khớp từng bit ([check_author_smart.py](../kaggle/check_author_smart.py)), và gọi nó là "SMART theo code công khai".
+- Runner Kaggle tái tạo đúng hành vi này, khớp từng bit ([check_author_smart.py](../src_baseline/check_author_smart.py)), và gọi nó là "SMART theo code công khai".
 - Pipeline cũ (`paper_method`) thay bằng nhiễu embedding liên tục, nên là một cohort khác.
 
 **MLM** (không nằm trong 8 setup đang chạy):

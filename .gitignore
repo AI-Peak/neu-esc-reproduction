@@ -40,9 +40,9 @@ __pycache__/
 *.jar
 
 # Secrets and authentication artifacts
-# Kaggle API tokens for the team's accounts (kaggle/account_*/kaggle.json)
+# Kaggle API tokens for the team accounts (kaggle/<n>_account_<user>/kaggle.json); the folder holds nothing else
 kaggle.json
-/kaggle/account_*/
+/kaggle/
 .env
 .env.*
 *.pem

@@ -22,17 +22,19 @@ Kết quả chỉ được gọi là "tái lập theo code công khai", không p
 
 | Đường dẫn | Nội dung |
 |---|---|
-| [kaggle/](kaggle/README.md) | Runner, queue chạy 2 GPU, kiểm tra kỹ thuật, tổng hợp kết quả, notebook smoke và notebook chạy thật. **Bắt đầu từ đây.** |
+| [src_baseline/](src_baseline/README.md) | Code baseline (reproduce NEU-ESC): runner, queue chạy 2 GPU, kiểm tra kỹ thuật, tổng hợp kết quả, notebook smoke và notebook chạy thật. **Bắt đầu từ đây.** |
+| [src_caitien/](src_caitien/README.md) | Code cải tiến: bản sao baseline cộng các setup cải tiến (factorized/PCGrad/PaTGrad/CB-Focal, CR-SD, CR-SD + ensemble distillation). |
+| `kaggle/` | Chỉ chứa API token của các account Kaggle (gitignored, không commit). |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Phát hiện về dữ liệu, code tác giả, Table 6 và Figure 3; giới hạn của tuyên bố |
 | `docs/papers/` | Paper và proposal. Chỉ có trên máy, không commit |
 | [reports/reference/](reports/reference/) | Số liệu Table 6 và Figure 3 chép từ paper, phần audit Figure 3 |
-| [reports/method/reference/](reports/method/reference/) | Bản sao code tác giả, dùng cho `kaggle/check_author_smart.py` |
+| [reports/method/reference/](reports/method/reference/) | Bản sao code tác giả, dùng cho `src_baseline/check_author_smart.py` |
 | [reports/source/](reports/source/) | Hash tải dữ liệu, thống kê nhãn, đối chiếu CSV gốc với bản `_processed` |
-| `reports/kaggle_results/` | Sẽ chứa kết quả 40 run sau khi chạy `kaggle/aggregate.py` |
+| `reports/kaggle_results/` | Sẽ chứa kết quả 40 run sau khi chạy `src_baseline/aggregate.py` |
 
 ## Dữ liệu
 
-Không commit dữ liệu, vì repo của tác giả không có license phân phối. Runner tự tải 6 file CSV từ repo tác giả và kiểm SHA-256 (`python kaggle/neu_esc_kaggle.py fetch --data-dir …`). Thư mục `data/raw/` và `runs/` đã được `.gitignore`.
+Không commit dữ liệu, vì repo của tác giả không có license phân phối. Runner tự tải 6 file CSV từ repo tác giả và kiểm SHA-256 (`python src_baseline/neu_esc_kaggle.py fetch --data-dir …`). Thư mục `data/raw/` và `runs/` đã được `.gitignore`.
 
 ## Pipeline cũ
 
@@ -47,4 +49,4 @@ Bản gốc vẫn còn trong git history ở commit `d626a86`.
 
 - Không push khi chưa được người phụ trách repo đồng ý.
 - Không chọn seed hay checkpoint theo test.
-- Điều kiện đi tiếp giữa các seed là `kaggle/check_runs.py` báo PASS, không phải điểm có gần paper hay không.
+- Điều kiện đi tiếp giữa các seed là `src_baseline/check_runs.py` báo PASS, không phải điểm có gần paper hay không.

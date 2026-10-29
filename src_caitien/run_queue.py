@@ -1,9 +1,10 @@
 """Run backbone x setup x seed jobs, one process per GPU (Kaggle T4 x2 -> two at a time).
 
-    python kaggle/run_queue.py --data-dir DATA --out-dir runs --seeds 42
-    python kaggle/run_queue.py --data-dir DATA --out-dir smoke --seeds 42 -- --epochs 1 --max-steps-per-epoch 30
+    python src_caitien/run_queue.py --data-dir DATA --out-dir runs --seeds 42
+    python src_caitien/run_queue.py --data-dir DATA --out-dir smoke --seeds 42 -- --epochs 1 --max-steps-per-epoch 30
+    python src_caitien/run_queue.py --setups fac_patgrad_cbf ... --data-dir DATA ...
 
-Arguments after `--` are passed to every `neu_esc_kaggle.py train` call. Runs whose
+Arguments after `--` are passed to every `neu_esc_caitien.py train` call. Runs whose
 metrics.json is already COMPLETED are skipped by the trainer, so a queue can be relaunched
 after an interrupted session. Jobs start longest-first so both GPUs finish close together.
 """
@@ -18,11 +19,21 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-RUNNER = HERE / "neu_esc_kaggle.py"
+RUNNER = HERE / "neu_esc_caitien.py"
 BACKBONES = ("phobert", "visobert")
 SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart")
-# Relative cost per run, used only for ordering: SMART adds two forward+backward passes.
-COST = {"mtl_smart": 3.0, "mtl": 1.0, "st_sentiment": 0.6, "st_topic": 0.6}
+# Relative cost per run, used only for ordering: SMART adds two forward+backward passes,
+# selfdistill a second dropout pass plus the EMA teacher forward.
+COST = {"mtl_smart": 3.0, "mtl": 1.0, "st_sentiment": 0.6, "st_topic": 0.6, "selfdistill": 2.4,
+        "crsd_ens": 2.4}
+
+
+def cost(setup):
+    """Factorial setups of neu_esc_caitien.py: surgery adds one backward per task, fac one for L_joint."""
+    if setup in COST:
+        return COST[setup]
+    head, opt, _ = setup.split("_")
+    return (1.0 if opt == "sum" else 1.7) + (0.6 if head == "fac" and opt != "sum" else 0.0)
 
 
 def visible_gpus():
@@ -44,21 +55,25 @@ def main(argv=None):
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--seeds", nargs="+", type=int, required=True)
     parser.add_argument("--backbones", nargs="+", default=list(BACKBONES), choices=BACKBONES)
-    parser.add_argument("--setups", nargs="+", default=list(SETUPS), choices=SETUPS)
+    parser.add_argument("--runner", default=str(RUNNER), help="trainer script (default neu_esc_caitien.py)")
+    parser.add_argument("--setups", nargs="+", default=list(SETUPS), help="validated by the runner")
+    parser.add_argument("--folds", type=int, help="run every fold k of N as `train --fold k --num-folds N` "
+                        "(teachers for crsd_ens)")
     parser.add_argument("--gpus", nargs="+", help="GPU indices; default: all visible (CPU if none)")
     parser.add_argument("--no-prefetch", action="store_true", help="skip caching models before launch")
     args = parser.parse_args(argv)
 
     gpus = args.gpus or visible_gpus() or [""]
-    jobs = [(b, s, seed) for seed in args.seeds for b in args.backbones for s in args.setups]
-    jobs.sort(key=lambda job: -COST[job[1]])
+    folds = range(args.folds) if args.folds else [None]
+    jobs = [(b, s, seed, k) for seed in args.seeds for b in args.backbones for s in args.setups for k in folds]
+    jobs.sort(key=lambda job: -cost(job[1]))
     out_dir = Path(args.out_dir)
     log_dir = out_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     if not args.no_prefetch:
         # Cache each model once so two processes never download the same files at once.
-        subprocess.run([sys.executable, str(RUNNER), "prefetch", "--backbones", *args.backbones], check=True)
+        subprocess.run([sys.executable, args.runner, "prefetch", "--backbones", *args.backbones], check=True)
 
     lock = threading.Lock()
     results = []
@@ -69,11 +84,12 @@ def main(argv=None):
             with lock:
                 if not jobs:
                     return
-                backbone, setup, seed = jobs.pop(0)
-            name = f"{backbone}-{setup}-s{seed}"
-            command = [sys.executable, str(RUNNER), "train", "--backbone", backbone, "--setup", setup,
+                backbone, setup, seed, fold = jobs.pop(0)
+            name = f"{backbone}-{setup}-s{seed}" + (f"-f{fold}of{args.folds}" if fold is not None else "")
+            fold_args = ["--fold", str(fold), "--num-folds", str(args.folds)] if fold is not None else []
+            command = [sys.executable, args.runner, "train", "--backbone", backbone, "--setup", setup,
                        "--seed", str(seed), "--data-dir", args.data_dir, "--out-dir", args.out_dir,
-                       *passthrough]
+                       *fold_args, *passthrough]
             env = dict(os.environ, CUDA_VISIBLE_DEVICES=gpu, PYTHONUNBUFFERED="1")
             print(f"[{time.strftime('%H:%M:%S')}] gpu{gpu or '-cpu'} start {name}", flush=True)
             job_start = time.time()

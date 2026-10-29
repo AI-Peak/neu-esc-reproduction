@@ -22,7 +22,7 @@ Runner bám code công khai của tác giả ([hung20gg/multi-task-bert@b5637cc]
 
 Thiết lập chung: batch 128, max_length 128, tokenizer slow. Dữ liệu lấy từ CSV của tác giả, có kiểm SHA-256. PhoBERT đọc `*_processed.csv` (tác giả đã tách từ sẵn), ViSoBERT đọc CSV gốc. Model khóa theo revision ghi trong `BACKBONES` của `neu_esc_kaggle.py`. Các phát hiện về dữ liệu, code tác giả, Table 6 và Figure 3 nằm trong [docs/FINDINGS.md](../docs/FINDINGS.md).
 
-**SMART theo đúng code tác giả.** Code gốc cộng noise vào *token ID* rồi gọi `.long()`, nên gradient theo noise luôn là `None`. Kết quả là khoảng 49% token bị đổi thành ID liền trước, sau đó tính sym-KL với `reduction='sum'`. Hàm `author_smart_ids` cho ra ID và loss giống hệt `SMARTLoss` gốc. Lệnh `python kaggle/check_author_smart.py` kiểm tra điều này.
+**SMART theo đúng code tác giả.** Code gốc cộng noise vào *token ID* rồi gọi `.long()`, nên gradient theo noise luôn là `None`. Kết quả là khoảng 49% token bị đổi thành ID liền trước, sau đó tính sym-KL với `reduction='sum'`. Hàm `author_smart_ids` cho ra ID và loss giống hệt `SMARTLoss` gốc. Lệnh `python src_baseline/check_author_smart.py` kiểm tra điều này.
 
 **Lệch có chủ đích** (mỗi run ghi lại trong `config.json`):
 1. **fp16 autocast + GradScaler**, vì T4 không có bf16; tác giả train fp32.
@@ -47,7 +47,7 @@ Metrics có thêm `weighted_f1_author_mtl`: trainer 2-task của tác giả gọ
 ## Chạy trên Kaggle
 
 1. **Đưa code lên.** Có hai cách:
-   - Upload các file `.py` trong `kaggle/` thành một Kaggle Dataset **riêng tư**, rồi *Add Input* vào notebook. Notebook tự tìm `neu_esc_kaggle.py` trong `/kaggle/input`. **Không upload các thư mục `account_*`**, vì chúng chứa API token (`kaggle.json`).
+   - Upload các file `.py` trong `src_baseline/` thành một Kaggle Dataset **riêng tư**, rồi *Add Input* vào notebook. Notebook tự tìm `neu_esc_kaggle.py` trong `/kaggle/input`. **Không upload các thư mục `account_*`**, vì chúng chứa API token (`kaggle.json`).
    - Hoặc để notebook `git clone`, nếu code đã có trên GitHub. Việc push do người phụ trách module 04 quyết định.
 2. **Cài đặt notebook:** Accelerator = **GPU T4 x2**, Internet = **On** (tài khoản cần xác minh số điện thoại).
 3. **Chạy `smoke_timing.ipynb`** (khoảng 20–40 phút). Nó in bảng thời gian mỗi run và tổng GPU-giờ cho 40 run, đồng thời gợi ý micro-batch theo VRAM.
@@ -56,8 +56,8 @@ Metrics có thêm `weighted_f1_author_mtl`: trainer 2-task của tác giả gọ
 6. **Tải kết quả về máy.** Thư mục `/kaggle/working/runs/` của mỗi session nằm ở tab Output của notebook version. Giải nén vào `runs/s42/`, `runs/s43/`, …. `runs/` đã được `.gitignore`. Sau đó kiểm tra và gộp:
 
 ```bash
-python kaggle/check_runs.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --seeds 42 43 44 45 46
-python kaggle/aggregate.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --out reports/kaggle_results
+python src_baseline/check_runs.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --seeds 42 43 44 45 46
+python src_baseline/aggregate.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --out reports/kaggle_results
 ```
 
 Kết quả thô từng run (logits, predictions) nằm trong `runs/` và không commit. Bảng tổng hợp nhỏ `reports/kaggle_results/` (gồm `summary.md`, `summary.csv`, `per_run.csv`, `gains.csv`) thì được commit làm kết quả tái lập.
@@ -85,6 +85,6 @@ Các cờ `--epochs`, `--max-steps-per-epoch`, `--limit-eval`, `--model-path`, `
 Cần `torch`, `transformers<5`, `sentencepiece`, `scikit-learn`, `pandas`. Dùng một model tí hon có tokenizer thật, đặt ở `runs/tiny/phobert`. `data/raw/` và `runs/` đều đã được `.gitignore`, nên dữ liệu và model thử không bị commit nhầm:
 
 ```bash
-python kaggle/neu_esc_kaggle.py fetch --data-dir data/raw/kaggle
-python kaggle/neu_esc_kaggle.py train --backbone phobert --setup mtl_smart --seed 42 --data-dir data/raw/kaggle --out-dir runs/cpu --model-path runs/tiny/phobert --epochs 2 --max-steps-per-epoch 3 --limit-eval 200 --micro-batch 32
+python src_baseline/neu_esc_kaggle.py fetch --data-dir data/raw/kaggle
+python src_baseline/neu_esc_kaggle.py train --backbone phobert --setup mtl_smart --seed 42 --data-dir data/raw/kaggle --out-dir runs/cpu --model-path runs/tiny/phobert --epochs 2 --max-steps-per-epoch 3 --limit-eval 200 --micro-batch 32
 ```
