@@ -20,9 +20,10 @@ from pathlib import Path
 import numpy as np
 
 BACKBONES = ("phobert", "visobert")
-SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart")
+SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart", "mtl_mlm", "mtl_mlm_smart")
 TASKS = {"st_sentiment": ("sentiment",), "st_topic": ("topic",),
-         "mtl": ("sentiment", "topic"), "mtl_smart": ("sentiment", "topic")}
+         "mtl": ("sentiment", "topic"), "mtl_smart": ("sentiment", "topic"),
+         "mtl_mlm": ("sentiment", "topic"), "mtl_mlm_smart": ("sentiment", "topic")}
 SPLIT_SIZES = {"val": 3305, "test": 6613}
 
 

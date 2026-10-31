@@ -17,7 +17,8 @@ from pathlib import Path
 
 import numpy as np
 
-# reports/reference/table6.csv rows 04/05 (single task), 07/08 (2-task), 10/11 (2-task & SMART).
+# reports/reference/table6.csv rows 04/05 (single task), 07/08 (2-task), 10/11 (2-task & SMART),
+# 13/14 (2-task & MLM), 16/17 (2-task & MLM & SMART).
 PAPER = {
     ("visobert", "single"): {"sentiment": (82.78, 75.79, 82.17), "topic": (77.94, 60.65, 78.06)},
     ("phobert", "single"): {"sentiment": (81.75, 77.70, 82.02), "topic": (78.65, 62.73, 78.36)},
@@ -25,11 +26,17 @@ PAPER = {
     ("phobert", "mtl"): {"sentiment": (82.88, 75.99, 82.85), "topic": (79.25, 62.11, 79.59)},
     ("visobert", "mtl_smart"): {"sentiment": (83.58, 77.17, 84.19), "topic": (79.80, 63.13, 80.55)},
     ("phobert", "mtl_smart"): {"sentiment": (83.26, 77.52, 83.66), "topic": (79.31, 62.79, 80.04)},
+    ("visobert", "mtl_mlm"): {"sentiment": (82.23, 75.15, 82.70), "topic": (78.38, 60.79, 78.87)},
+    ("phobert", "mtl_mlm"): {"sentiment": (82.67, 77.03, 82.72), "topic": (78.48, 62.33, 78.44)},
+    ("visobert", "mtl_mlm_smart"): {"sentiment": (83.12, 76.74, 83.57), "topic": (79.25, 62.19, 79.88)},
+    ("phobert", "mtl_mlm_smart"): {"sentiment": (83.66, 77.34, 84.15), "topic": (79.49, 62.58, 80.04)},
 }
 METRICS = ("accuracy", "macro_f1", "weighted_f1", "weighted_f1_author_mtl")
 # Single-task rows in Table 6 combine two runs: sentiment from st_sentiment, topic from st_topic.
-SETUP_GROUP = {"st_sentiment": "single", "st_topic": "single", "mtl": "mtl", "mtl_smart": "mtl_smart"}
-GAINS = (("single", "mtl"), ("mtl", "mtl_smart"), ("single", "mtl_smart"))
+SETUP_GROUP = {"st_sentiment": "single", "st_topic": "single", "mtl": "mtl", "mtl_smart": "mtl_smart",
+               "mtl_mlm": "mtl_mlm", "mtl_mlm_smart": "mtl_mlm_smart"}
+GAINS = (("single", "mtl"), ("mtl", "mtl_smart"), ("single", "mtl_smart"), ("mtl", "mtl_mlm"),
+         ("mtl_mlm", "mtl_mlm_smart"), ("single", "mtl_mlm_smart"))
 
 
 def load_runs(directories, include_debug):

@@ -20,9 +20,11 @@ from pathlib import Path
 import numpy as np
 
 BACKBONES = ("phobert", "visobert")
-SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart")
+SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart", "mtl_mlm", "mtl_mlm_smart", "selfdistill", "crsd_ens")
 TASKS = {"st_sentiment": ("sentiment",), "st_topic": ("topic",),
-         "mtl": ("sentiment", "topic"), "mtl_smart": ("sentiment", "topic")}
+         "mtl": ("sentiment", "topic"), "mtl_smart": ("sentiment", "topic"),
+         "mtl_mlm": ("sentiment", "topic"), "mtl_mlm_smart": ("sentiment", "topic"),
+         "selfdistill": ("sentiment", "topic"), "crsd_ens": ("sentiment", "topic")}
 SPLIT_SIZES = {"val": 3305, "test": 6613}
 
 
@@ -52,7 +54,7 @@ def check_run(run_dir, setup):
         problems.append(f"training loss did not go down ({losses[0]:.4f} -> {losses[-1]:.4f})")
 
     arrays = np.load(run_dir / "logits.npz")
-    for task in TASKS.get(setup, ("sentiment", "topic")):
+    for task in TASKS[setup]:
         for split in ("val", "test"):
             if not np.isfinite(arrays[f"{split}_{task}"]).all():
                 problems.append(f"non-finite {split} logits for {task}")
@@ -79,8 +81,7 @@ def main(argv=None):
     parser.add_argument("run_dirs", nargs="+")
     parser.add_argument("--seeds", nargs="+", type=int, required=True, help="seeds that must be complete")
     parser.add_argument("--backbones", nargs="+", default=list(BACKBONES), choices=BACKBONES)
-    parser.add_argument("--setups", nargs="+", default=list(SETUPS),
-                        help="any other name is a 2-task setup (neu_esc_caitien.py factorial)")
+    parser.add_argument("--setups", nargs="+", default=list(SETUPS), choices=SETUPS)
     args = parser.parse_args(argv)
 
     found = {}

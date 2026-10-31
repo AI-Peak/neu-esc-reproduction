@@ -14,7 +14,8 @@ keyed by sample ID, metrics, and the SHA-256 of this file.
 Subcommands:
   fetch     download the authors' CSV splits and check SHA-256
   prefetch  download pinned model/tokenizer revisions into the HF cache
-  train     one run: --backbone {phobert,visobert} --setup {st_sentiment,st_topic,mtl,mtl_smart} --seed N
+  train     one run: --backbone {phobert,visobert} --setup {st_sentiment,st_topic,mtl,mtl_smart,
+            mtl_mlm,mtl_mlm_smart} --seed N
 """
 from __future__ import annotations
 
@@ -75,11 +76,21 @@ SETUPS = {
             "patience": None, "smart": False, "micro_batch": 64},
     "mtl_smart": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.1,
                   "patience": None, "smart": True, "micro_batch": 32},
+    # Trainer/mlm_3head_trainer.py (= trainer/mlm_head_trainer.py) run by trainmultihead.py with
+    # epochs=20: loss L_s + L_t + L_MLM / avg_mask (weights 1/1), LinearLR to (0.15 / 20) * 30 = 0.225.
+    # That trainer always adds SMART (its `if self.is_smart` is commented out); mtl_mlm is the row
+    # Table 6 reports without SMART, i.e. the same trainer with SMART switched off.
+    "mtl_mlm": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.225,
+                "patience": None, "smart": False, "micro_batch": 32, "mlm": True},
+    "mtl_mlm_smart": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.225,
+                      "patience": None, "smart": True, "micro_batch": 16, "mlm": True},
 }
 COMMON = {"lr": 2e-5, "weight_decay": 0.01, "batch_size": 128, "max_length": 128,
           "eval_batch_size": 128, "mtl_task_weight": 0.5}
 # utils/loss_function.py SMARTLoss defaults as used by head_trainer (weight 0.02).
 SMART = {"weight": 0.02, "noise_var": 1e-5, "norm_eps": 1e-6, "num_steps": 1}
+# utils/dataloader.py DataCollatorHandMade + architecture/bert3head_mlm/model.py.
+MLM = {"mask_prob": 0.3, "head_vocab": 64001, "random_ids": 64000}
 
 
 def log(message):
@@ -211,9 +222,15 @@ def build_model(backbone_cfg, setup_cfg, model_path):
     encoder, info = AutoModel.from_pretrained(source, **kwargs)
     hidden = encoder.config.hidden_size
 
+    mlm = setup_cfg.get("mlm", False)
+
     class Linear2Head(nn.Module):
         """architecture/bert2head/model.py: BertLinear2HEAD. Its Dropout(0.2) layers are
-        declared but never called in forward, so they are left out here."""
+        declared but never called in forward, so they are left out here.
+
+        With mlm (architecture/bert3head_mlm/model.py: BertLinear3HEAD) a second encoder pass over
+        the masked input feeds Linear -> SiLU -> LayerNorm -> Linear(64001) on every token; only the
+        masked positions enter the loss, so the head is applied to those rows alone (same values)."""
 
         def __init__(self):
             super().__init__()
@@ -223,14 +240,52 @@ def build_model(backbone_cfg, setup_cfg, model_path):
             self.ln1 = nn.LayerNorm(hidden)
             self.out_sent = nn.Linear(hidden, NUM_LABELS["sentiment"])
             self.out_clas = nn.Linear(hidden, NUM_LABELS["topic"])
+            if mlm:
+                self.fc_input2 = nn.Linear(hidden, hidden)
+                self.ln2 = nn.LayerNorm(hidden)
+                self.mlm_out = nn.Linear(hidden, MLM["head_vocab"])
 
-        def forward(self, input_ids, attention_mask):
+        def forward(self, input_ids, attention_mask, mlm_ids=None, mlm_positions=None):
             cls = self.encoder(input_ids=input_ids,
                                attention_mask=attention_mask).last_hidden_state[:, 0, :]
             embedded = self.ln1(self.activation(self.fc_input(cls)))
-            return self.out_sent(embedded), self.out_clas(embedded)
+            outputs = (self.out_sent(embedded), self.out_clas(embedded))
+            if mlm_ids is None:
+                return outputs
+            states = self.encoder(input_ids=mlm_ids, attention_mask=attention_mask).last_hidden_state
+            picked = states[mlm_positions]
+            return outputs + (self.mlm_out(self.ln2(self.activation(self.fc_input2(picked)))),)
 
     return Linear2Head(), info
+
+
+def author_mlm_rows(rows, mask_token_id, random_ids):
+    """DataCollatorHandMade.random_label for a list of token-id rows (unpadded, special tokens
+    included, as the authors count them through attention_mask). Per row: int(0.3 * length) draws of
+    a position with replacement are set to <mask>; every <mask> position gets the original token as
+    label; then, per draw in order, 10% put the original token back and 10% put a random ID. Returns
+    masked rows, label rows (-100 = no label) and the number of draws (the authors' total_mask)."""
+    import torch
+    masked, labels, draws = [], [], 0
+    for row in rows:
+        original = torch.from_numpy(row)
+        length = len(row)
+        count = int(length * MLM["mask_prob"])
+        draws += count
+        positions = torch.randint(0, length, size=(count,), dtype=torch.int32).long()
+        out = original.clone()
+        out[positions] = mask_token_id
+        label = original.clone()
+        label[out != mask_token_id] = -100
+        lucky = torch.randint(1, 11, size=(count,), dtype=torch.int32)
+        for i, value in enumerate(lucky.tolist()):
+            if value % 8 == 0:
+                out[positions[i]] = original[positions[i]]
+            elif value % 7 == 0:
+                out[positions[i]] = torch.randint(0, random_ids, size=(1,))[0]
+        masked.append(out.numpy())
+        labels.append(label.numpy())
+    return masked, labels, draws
 
 
 def sym_kl_sum(perturbed, clean):
@@ -384,6 +439,11 @@ def train(args):
 
     # ---- model and optimizer (AdamW defaults otherwise: betas 0.9/0.999, weight_decay 0.01)
     model, loading_info = build_model(backbone, setup, args.model_path)
+    # The authors draw random replacement IDs in [0, 64000), sized for PhoBERT's 64001-token vocab.
+    # ViSoBERT's vocab is smaller, so those IDs would index past its embedding table; they are drawn
+    # within the encoder's own vocab instead (a recorded deviation; PhoBERT is unchanged).
+    mlm_random_ids = (min(MLM["random_ids"], model.encoder.get_input_embeddings().num_embeddings)
+                      if setup.get("mlm") else None)
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=COMMON["lr"], eps=setup["adam_eps"],
                                   weight_decay=COMMON["weight_decay"])
@@ -400,6 +460,8 @@ def train(args):
         "tasks": list(tasks), "epochs": setup["epochs"], "adam_eps": setup["adam_eps"],
         "lr_end_factor": setup["lr_end"], "early_stopping_patience": setup["patience"],
         "smart": SMART if setup["smart"] else None, **COMMON, "micro_batch": micro_batch,
+        "mlm": {**MLM, "random_ids_used": mlm_random_ids, "loss": "L_s + L_t + L_MLM / avg_mask",
+                "mask_token_id": tokenizer.mask_token_id} if setup.get("mlm") else None,
         "precision": "fp16_autocast" if use_amp else "fp32",
         "selection": "val macro-F1" if len(tasks) == 1 else "mean val macro-F1 over both tasks",
         "max_steps_per_epoch": args.max_steps_per_epoch, "limit_eval": args.limit_eval,
@@ -442,15 +504,40 @@ def train(args):
             step_start = time.perf_counter()
             optimizer.zero_grad(set_to_none=True)
             batch_loss = 0.0
+            if setup.get("mlm"):
+                # Masked once per 128-row batch: L_MLM is a mean over the batch's labelled positions
+                # and avg_mask = draws / 128, as in the authors' unsplit batch.
+                mlm_rows, mlm_labels, draws = author_mlm_rows([sequences["train"][i] for i in batch],
+                                                              tokenizer.mask_token_id, mlm_random_ids)
+                labelled = sum(int((label != -100).sum()) for label in mlm_labels)
+                avg_mask = draws / len(batch)
             for m in range(0, len(batch), micro_batch):
                 chunk = batch[m:m + micro_batch]
                 share = len(chunk) / len(batch)
                 ids, mask = collate(sequences["train"], chunk, pad_id)
                 ids, mask = ids.to(device), mask.to(device)
                 targets = [task_columns[task][chunk].to(device) for task in tasks]
+                if setup.get("mlm"):
+                    local = list(range(m, m + len(chunk)))
+                    mlm_ids, _ = collate(mlm_rows, local, pad_id)
+                    mlm_target, _ = collate(mlm_labels, local, -100)
+                    mlm_ids, mlm_target = mlm_ids.to(device), mlm_target.to(device)
                 with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
-                    outputs = model(ids, mask)
-                    if len(tasks) == 1:
+                    outputs = (model(ids, mask, mlm_ids, mlm_target != -100) if setup.get("mlm")
+                               else model(ids, mask))
+                    if setup.get("mlm"):
+                        # mlm_3head_trainer.py: L_s + L_t (+ 0.02 * SMART each) + L_MLM / avg_mask.
+                        loss = 0.0
+                        for k, task in enumerate(tasks):
+                            task_loss = F.cross_entropy(outputs[k].float(), targets[k]) * share
+                            if setup["smart"]:
+                                perturbed = model(author_smart_ids(ids), mask)[k]
+                                task_loss = task_loss + SMART["weight"] * sym_kl_sum(perturbed, outputs[k])
+                            loss = loss + task_loss
+                        mlm_sum = F.cross_entropy(outputs[2].float(), mlm_target[mlm_target != -100],
+                                                  reduction="sum")
+                        loss = loss + mlm_sum / labelled / avg_mask
+                    elif len(tasks) == 1:
                         # base_trainer.py: CrossEntropyLoss (mean) over the 128-row batch.
                         loss = F.cross_entropy(outputs[0].float(), targets[0]) * share
                     else:

@@ -1,29 +1,17 @@
-"""Group 5 improvement runner: a copy of neu_esc_kaggle.py (the baseline, left untouched) plus the
-proposal's factorial ablation on the 2-task protocol (20 epochs, AdamW eps 5e-9, LinearLR to 0.1):
+"""Group 5 improvement runner: src_baseline/neu_esc_kaggle.py (the baseline, left untouched) plus
 
-  head  sep | fac   separate heads (= baseline Linear2Head) | Factorized + Interaction joint head
-  opt   sum | pcgrad | patgrad   plain loss sum | PCGrad | PaTGrad (pair-aware asymmetric surgery)
-  loss  ce  | cbf   cross-entropy | class-balanced focal loss on the two marginals
+  selfdistill  CR-SD: R-Drop (two dropout passes of the 2-task model, symmetric KL) + an EMA teacher
+               of the student's weights (decay 0.999) that the student distils from epoch 2 on;
+               selection, test and inference use the EMA weights (the student is scored too).
+  crsd_ens     CR-SD + D: CR-SD plus a second, fixed teacher, an ensemble of out-of-fold predictions
+               on the training set, distilled from epoch 1 on. Its targets come from
+               `train --fold k --num-folds N` runs (each trains on the other folds and predicts its
+               own fold) and `ensemble-targets`, which averages their probabilities per training row.
 
-Setup names are f"{head}_{opt}_{loss}"; sep_sum_ce is the baseline `mtl` setup run by this file.
-Fixed, untuned choices (recorded in config.json under "improvement"): rank r=16 with the V branch
-zero-initialised so training starts from c = 0; L = 0.5 L_s + 0.5 L_t + 0.5 L_joint; CB beta 0.999,
-focal gamma 2; surgery per encoder layer group (embeddings, layer 0..N-1). PaTGrad uses epoch 1 as
-warm-up (plain sum while probing per-layer cos(g_s, g_t)), then does surgery only on the top-k
-layer groups with the lowest mean cosine. Urgency U_task = mean over the batch of
-A[s,t] * R_c * D_c, with A the EMA pair conflict 0.5 * (1 - cos) of per-sample gradients at the
-pooled [CLS] vector, R the CB effective-number weights and D the EMA class-wise NLL (normalised to
-mean 1). On conflict, the task with lower urgency is projected onto the normal plane of the other.
-
-Direction 1, CR-SD (setup `selfdistill`): R-Drop (two dropout passes, symmetric KL) + an EMA teacher
-of the student's weights (decay 0.999) that the student distils from epoch 2 on; selection, test and
-inference use the EMA weights. CR-SD + D (setup `crsd_ens`) adds a second, fixed teacher: an ensemble
-of out-of-fold predictions on the training set, distilled from epoch 1 on. Those targets come from
-`train --fold k --num-folds N` runs (each trains on the other folds and predicts its own fold) and
-`ensemble-targets`, which averages their probabilities per training row.
-
-Everything below the baseline docstring is unchanged except build_model, the loss/step code and
-the extra outputs (joint logits and joint-argmax metrics for fac, surgery diagnostics per epoch).
+The baseline setups (st_sentiment, st_topic, mtl, mtl_smart, mtl_mlm, mtl_mlm_smart) run here give
+the same results as in the baseline runner. Changes to the baseline code: the setups and constants
+above, the fold split, the teacher and its loss in train(), predict() restoring the model's mode,
+and the extra outputs (student metrics, oof.npz).
 
 Baseline docstring:
 Lean NEU-ESC reproduction runner for Kaggle T4, following the authors' public code.
@@ -42,7 +30,8 @@ keyed by sample ID, metrics, and the SHA-256 of this file.
 Subcommands:
   fetch     download the authors' CSV splits and check SHA-256
   prefetch  download pinned model/tokenizer revisions into the HF cache
-  train     one run: --backbone {phobert,visobert} --setup {st_sentiment,st_topic,mtl,mtl_smart} --seed N
+  train     one run: --backbone {phobert,visobert} --setup {st_sentiment,st_topic,mtl,mtl_smart,
+            mtl_mlm,mtl_mlm_smart,selfdistill,crsd_ens} --seed N [--fold k --num-folds N]
   ensemble-targets  average out-of-fold train predictions of fold runs into a crsd_ens target file
 """
 from __future__ import annotations
@@ -105,25 +94,30 @@ SETUPS = {
             "patience": None, "smart": False, "micro_batch": 64},
     "mtl_smart": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.1,
                   "patience": None, "smart": True, "micro_batch": 32},
+    # Trainer/mlm_3head_trainer.py (= trainer/mlm_head_trainer.py) run by trainmultihead.py with
+    # epochs=20: loss L_s + L_t + L_MLM / avg_mask (weights 1/1), LinearLR to (0.15 / 20) * 30 = 0.225.
+    # That trainer always adds SMART (its `if self.is_smart` is commented out); mtl_mlm is the row
+    # Table 6 reports without SMART, i.e. the same trainer with SMART switched off.
+    "mtl_mlm": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.225,
+                "patience": None, "smart": False, "micro_batch": 32, "mlm": True},
+    "mtl_mlm_smart": {"tasks": TASKS, "epochs": 20, "adam_eps": 5e-9, "lr_end": 0.225,
+                      "patience": None, "smart": True, "micro_batch": 16, "mlm": True},
 }
-for _head in ("sep", "fac"):
-    for _opt in ("sum", "pcgrad", "patgrad"):
-        for _loss in ("ce", "cbf"):
-            SETUPS[f"{_head}_{_opt}_{_loss}"] = {**SETUPS["mtl"], "head": _head, "opt": _opt, "loss": _loss}
-# Direction 1: R-Drop consistency + EMA-teacher self-distillation on the separate-head 2-task model.
-# Micro-batch 32 because both dropout passes go through the encoder as one 64-row forward.
-SETUPS["selfdistill"] = {**SETUPS["sep_sum_ce"], "micro_batch": 32, "self_distill": True}
+COMMON = {"lr": 2e-5, "weight_decay": 0.01, "batch_size": 128, "max_length": 128,
+          "eval_batch_size": 128, "mtl_task_weight": 0.5}
+# utils/loss_function.py SMARTLoss defaults as used by head_trainer (weight 0.02).
+SMART = {"weight": 0.02, "noise_var": 1e-5, "norm_eps": 1e-6, "num_steps": 1}
+# utils/dataloader.py DataCollatorHandMade + architecture/bert3head_mlm/model.py.
+MLM = {"mask_prob": 0.3, "head_vocab": 64001, "random_ids": 64000}
+
+# CR-SD on the 2-task mtl model. Micro-batch 32 because both dropout passes go through the encoder
+# as one 64-row forward.
+SETUPS["selfdistill"] = {**SETUPS["mtl"], "micro_batch": 32, "self_distill": True}
 SELF_DISTILL = {"rdrop_alpha": 1.0, "kd_beta": 1.0, "ema_decay": 0.999, "kd_start_epoch": 2,
                 "ens_gamma": 1.0}
 # CR-SD + D: the ensemble teacher is ready from the first step, so its KD term runs from epoch 1.
 SETUPS["crsd_ens"] = {**SETUPS["selfdistill"], "ens_kd": True}
 FOLD_SEED = 2026  # fold assignment is fixed across training seeds and backbones
-IMPROVE = {"rank": 16, "joint_weight": 0.5, "cb_beta": 0.999, "focal_gamma": 2.0,
-           "patgrad_topk": 6, "patgrad_warmup_epochs": 1, "ema": 0.9}
-COMMON = {"lr": 2e-5, "weight_decay": 0.01, "batch_size": 128, "max_length": 128,
-          "eval_batch_size": 128, "mtl_task_weight": 0.5}
-# utils/loss_function.py SMARTLoss defaults as used by head_trainer (weight 0.02).
-SMART = {"weight": 0.02, "noise_var": 1e-5, "norm_eps": 1e-6, "num_steps": 1}
 
 
 def log(message):
@@ -260,16 +254,15 @@ def build_model(backbone_cfg, setup_cfg, model_path):
     encoder, info = AutoModel.from_pretrained(source, **kwargs)
     hidden = encoder.config.hidden_size
 
-    factorized = setup_cfg.get("head") == "fac"
-    n_s, n_t, rank = NUM_LABELS["sentiment"], NUM_LABELS["topic"], IMPROVE["rank"]
+    mlm = setup_cfg.get("mlm", False)
 
     class Linear2Head(nn.Module):
         """architecture/bert2head/model.py: BertLinear2HEAD. Its Dropout(0.2) layers are
         declared but never called in forward, so they are left out here.
 
-        With factorized=True, a_s and b_t are the two baseline heads and the interaction
-        c_st = <U_s(z), V_t(z)> is added: score(s, t) = a_s + b_t + c_st over the 40 pairs. Outputs are
-        then (log P(s|x), log P(t|x), joint scores flattened as s * 10 + t)."""
+        With mlm (architecture/bert3head_mlm/model.py: BertLinear3HEAD) a second encoder pass over
+        the masked input feeds Linear -> SiLU -> LayerNorm -> Linear(64001) on every token; only the
+        masked positions enter the loss, so the head is applied to those rows alone (same values)."""
 
         def __init__(self):
             super().__init__()
@@ -277,58 +270,54 @@ def build_model(backbone_cfg, setup_cfg, model_path):
             self.fc_input = nn.Linear(hidden, hidden)
             self.activation = nn.SiLU()
             self.ln1 = nn.LayerNorm(hidden)
-            self.out_sent = nn.Linear(hidden, n_s)
-            self.out_clas = nn.Linear(hidden, n_t)
-            if factorized:
-                self.inter_u = nn.Linear(hidden, n_s * rank)
-                self.inter_v = nn.Linear(hidden, n_t * rank)
-                # V = 0 at start, so c = 0 and the head starts as the two independent baseline heads.
-                nn.init.zeros_(self.inter_v.weight)
-                nn.init.zeros_(self.inter_v.bias)
+            self.out_sent = nn.Linear(hidden, NUM_LABELS["sentiment"])
+            self.out_clas = nn.Linear(hidden, NUM_LABELS["topic"])
+            if mlm:
+                self.fc_input2 = nn.Linear(hidden, hidden)
+                self.ln2 = nn.LayerNorm(hidden)
+                self.mlm_out = nn.Linear(hidden, MLM["head_vocab"])
 
-        def forward(self, input_ids, attention_mask, return_hidden=False):
+        def forward(self, input_ids, attention_mask, mlm_ids=None, mlm_positions=None):
             cls = self.encoder(input_ids=input_ids,
                                attention_mask=attention_mask).last_hidden_state[:, 0, :]
             embedded = self.ln1(self.activation(self.fc_input(cls)))
-            a, b = self.out_sent(embedded), self.out_clas(embedded)
-            if not factorized:
-                outputs = (a, b)
-            else:
-                u = self.inter_u(embedded).float().view(-1, n_s, rank)
-                v = self.inter_v(embedded).float().view(-1, n_t, rank)
-                joint = a.float()[:, :, None] + b.float()[:, None, :] + torch.einsum("bsr,btr->bst", u, v)
-                log_z = torch.logsumexp(joint.flatten(1), dim=1)[:, None]
-                outputs = (torch.logsumexp(joint, dim=2) - log_z, torch.logsumexp(joint, dim=1) - log_z,
-                           joint.flatten(1))
-            return outputs + (cls,) if return_hidden else outputs
+            outputs = (self.out_sent(embedded), self.out_clas(embedded))
+            if mlm_ids is None:
+                return outputs
+            states = self.encoder(input_ids=mlm_ids, attention_mask=attention_mask).last_hidden_state
+            picked = states[mlm_positions]
+            return outputs + (self.mlm_out(self.ln2(self.activation(self.fc_input2(picked)))),)
 
     return Linear2Head(), info
 
 
-def cb_weights(labels, num_classes):
-    """Class-balanced weights from the effective number (1 - beta^n) / (1 - beta), mean 1 over classes."""
-    counts = np.bincount(labels, minlength=num_classes).astype(np.float64)
-    weights = (1 - IMPROVE["cb_beta"]) / (1 - IMPROVE["cb_beta"] ** np.maximum(counts, 1))
-    return weights * num_classes / weights.sum()
-
-
-def per_sample_loss(logits, targets, kind, weights):
-    """Returns (loss, nll) per row. ce: plain NLL; cbf: w_y * (1 - p_y)^gamma * NLL.
-    Factorized heads pass log-marginals; log_softmax leaves them unchanged."""
-    import torch.nn.functional as F
-    nll = -F.log_softmax(logits.float(), dim=-1).gather(1, targets[:, None]).squeeze(1)
-    if kind == "ce":
-        return nll, nll
-    return weights[targets] * (1 - (-nll).exp()).pow(IMPROVE["focal_gamma"]) * nll, nll
-
-
-def layer_group(name):
-    if name.startswith("embeddings."):
-        return "emb"
-    parts = name.split(".")
-    if len(parts) > 2 and parts[0] == "encoder" and parts[1] == "layer":
-        return f"layer{int(parts[2]):02d}"
-    return None  # pooler: unused by the [CLS] head
+def author_mlm_rows(rows, mask_token_id, random_ids):
+    """DataCollatorHandMade.random_label for a list of token-id rows (unpadded, special tokens
+    included, as the authors count them through attention_mask). Per row: int(0.3 * length) draws of
+    a position with replacement are set to <mask>; every <mask> position gets the original token as
+    label; then, per draw in order, 10% put the original token back and 10% put a random ID. Returns
+    masked rows, label rows (-100 = no label) and the number of draws (the authors' total_mask)."""
+    import torch
+    masked, labels, draws = [], [], 0
+    for row in rows:
+        original = torch.from_numpy(row)
+        length = len(row)
+        count = int(length * MLM["mask_prob"])
+        draws += count
+        positions = torch.randint(0, length, size=(count,), dtype=torch.int32).long()
+        out = original.clone()
+        out[positions] = mask_token_id
+        label = original.clone()
+        label[out != mask_token_id] = -100
+        lucky = torch.randint(1, 11, size=(count,), dtype=torch.int32)
+        for i, value in enumerate(lucky.tolist()):
+            if value % 8 == 0:
+                out[positions[i]] = original[positions[i]]
+            elif value % 7 == 0:
+                out[positions[i]] = torch.randint(0, random_ids, size=(1,))[0]
+        masked.append(out.numpy())
+        labels.append(label.numpy())
+    return masked, labels, draws
 
 
 def sym_kl_sum(perturbed, clean):
@@ -458,7 +447,8 @@ def train(args):
             log(f"{run_name} already COMPLETED, skipping (use --force to rerun)")
             return 0
     run_dir.mkdir(parents=True, exist_ok=True)
-    for stale in ("epochs.jsonl", "metrics.json", "logits.npz", "predictions.csv", "oof.npz"):
+    for stale in ("epochs.jsonl", "metrics.json", "logits.npz", "predictions.csv", "oof.npz",
+                  "student_logits.npz"):
         (run_dir / stale).unlink(missing_ok=True)
     code = code_provenance()
 
@@ -499,6 +489,11 @@ def train(args):
 
     # ---- model and optimizer (AdamW defaults otherwise: betas 0.9/0.999, weight_decay 0.01)
     model, loading_info = build_model(backbone, setup, args.model_path)
+    # The authors draw random replacement IDs in [0, 64000), sized for PhoBERT's 64001-token vocab.
+    # ViSoBERT's vocab is smaller, so those IDs would index past its embedding table; they are drawn
+    # within the encoder's own vocab instead (a recorded deviation; PhoBERT is unchanged).
+    mlm_random_ids = (min(MLM["random_ids"], model.encoder.get_input_embeddings().num_embeddings)
+                      if setup.get("mlm") else None)
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=COMMON["lr"], eps=setup["adam_eps"],
                                   weight_decay=COMMON["weight_decay"])
@@ -522,14 +517,14 @@ def train(args):
         "tasks": list(tasks), "epochs": setup["epochs"], "adam_eps": setup["adam_eps"],
         "lr_end_factor": setup["lr_end"], "early_stopping_patience": setup["patience"],
         "smart": SMART if setup["smart"] else None, **COMMON, "micro_batch": micro_batch,
+        "mlm": {**MLM, "random_ids_used": mlm_random_ids, "loss": "L_s + L_t + L_MLM / avg_mask",
+                "mask_token_id": tokenizer.mask_token_id} if setup.get("mlm") else None,
         "precision": "fp16_autocast" if use_amp else "fp32",
         "selection": "val macro-F1" if len(tasks) == 1 else "mean val macro-F1 over both tasks",
         "max_steps_per_epoch": args.max_steps_per_epoch, "limit_eval": args.limit_eval,
         "benchmark_eligible": not debug, "environment": environment(device),
         "loading_info": {k: [str(x) for x in v] for k, v in loading_info.items()},
         "tokenize_seconds": tokenize_seconds,
-        "improvement": {"head": setup.get("head"), "opt": setup.get("opt"), "loss": setup.get("loss"),
-                        **IMPROVE} if "head" in setup else None,
         "self_distill": SELF_DISTILL if teacher is not None else None,
         "ensemble_teacher": {"targets": args.ens_targets,
                              "sources": [str(x) for x in targets_file["sources"]]} if ens_probs else None,
@@ -539,42 +534,13 @@ def train(args):
     }
     write_json(run_dir / "config.json", config)
 
-    # ---- improvement state (factorial setups only)
-    new_setup = "head" in setup
-    opt_kind = setup.get("opt", "sum")
-    surgery = new_setup and opt_kind != "sum"
-    n_s, n_t = NUM_LABELS["sentiment"], NUM_LABELS["topic"]
-    class_weights = {task: torch.tensor(cb_weights(labels["train"][task], NUM_LABELS[task]),
-                                        dtype=torch.float32, device=device) for task in tasks}
-    if surgery:
-        encoder_group = {id(p): layer_group(n) for n, p in model.encoder.named_parameters()}
-        params = [p for p in model.parameters() if p.requires_grad]
-        groups = {}
-        for i, p in enumerate(params):
-            if encoder_group.get(id(p)):
-                groups.setdefault(encoder_group[id(p)], []).append(i)
-        group_names = sorted(groups)
-        encoder_index = {i for idx in groups.values() for i in idx}
-        buf_s = {i: torch.zeros_like(params[i]) for i in encoder_index}
-        buf_t = {i: torch.zeros_like(params[i]) for i in encoder_index}
-        active = set(group_names) if opt_kind == "pcgrad" else set()
-        pair_conflict = torch.full((n_s, n_t), 0.5, device=device)
-        difficulty = {task: torch.ones(NUM_LABELS[task], device=device) for task in tasks}
-    ema = IMPROVE["ema"]
-
-    def ema_by_class(state, index, values, size):
-        sums = torch.zeros(size, device=device).index_add_(0, index, values)
-        counts = torch.zeros(size, device=device).index_add_(0, index, torch.ones_like(values))
-        seen = counts > 0
-        state[seen] = ema * state[seen] + (1 - ema) * sums[seen] / counts[seen]
-
     if ens_probs is not None:
         ens_log = {task: probs.clamp_min(1e-8).log().to(device) for task, probs in ens_probs.items()}
 
     def self_distill_loss(ids, mask, targets, batch_rows, epoch, chunk):
         """0.5 * sum over tasks of [CE averaged over two dropout passes + alpha * sym-KL(pass1, pass2)
-        + beta * mean KL(teacher || pass)], the KD term from kd_start_epoch on. Row sums divided by
-        the 128-row batch, so micro-batches add up to the batch mean."""
+        + beta * mean KL(teacher || pass) + gamma * mean KL(ensemble || pass)], the EMA term from
+        kd_start_epoch on. Row sums divided by the 128-row batch, so micro-batches add up to the batch mean."""
         both = model(torch.cat([ids, ids]), torch.cat([mask, mask]))
         teacher_out = None
         if epoch >= SELF_DISTILL["kd_start_epoch"]:
@@ -633,42 +599,46 @@ def train(args):
         if args.max_steps_per_epoch:
             batches = batches[:args.max_steps_per_epoch]
         loss_sum = 0.0
-        epoch_cos = {g: [] for g in group_names} if surgery else {}
-        epoch_global_cos, projected, steps_protect_sentiment = [], 0, 0
         for step, batch in enumerate(batches, start=1):
             step_start = time.perf_counter()
             optimizer.zero_grad(set_to_none=True)
             batch_loss = 0.0
-            if surgery:
-                for i in encoder_index:
-                    buf_s[i].zero_()
-                    buf_t[i].zero_()
-                urgency = torch.zeros(2, device=device)
+            if setup.get("mlm"):
+                # Masked once per 128-row batch: L_MLM is a mean over the batch's labelled positions
+                # and avg_mask = draws / 128, as in the authors' unsplit batch.
+                mlm_rows, mlm_labels, draws = author_mlm_rows([sequences["train"][i] for i in batch],
+                                                              tokenizer.mask_token_id, mlm_random_ids)
+                labelled = sum(int((label != -100).sum()) for label in mlm_labels)
+                avg_mask = draws / len(batch)
             for m in range(0, len(batch), micro_batch):
                 chunk = batch[m:m + micro_batch]
                 share = len(chunk) / len(batch)
                 ids, mask = collate(sequences["train"], chunk, pad_id)
                 ids, mask = ids.to(device), mask.to(device)
                 targets = [task_columns[task][chunk].to(device) for task in tasks]
+                if setup.get("mlm"):
+                    local = list(range(m, m + len(chunk)))
+                    mlm_ids, _ = collate(mlm_rows, local, pad_id)
+                    mlm_target, _ = collate(mlm_labels, local, -100)
+                    mlm_ids, mlm_target = mlm_ids.to(device), mlm_target.to(device)
                 with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
                     if teacher is None:
-                        outputs = model(ids, mask, return_hidden=True) if opt_kind == "patgrad" else model(ids, mask)
+                        outputs = (model(ids, mask, mlm_ids, mlm_target != -100) if setup.get("mlm")
+                                   else model(ids, mask))
                     if teacher is not None:
                         loss = self_distill_loss(ids, mask, targets, len(batch), epoch, chunk)
-                    elif new_setup:
-                        # Per-row losses summed over the micro-batch and divided by the 128-row batch,
-                        # the same scaling as CE mean * share; ce on separate heads equals the mtl loss.
-                        task_losses, nlls = [], []
+                    elif setup.get("mlm"):
+                        # mlm_3head_trainer.py: L_s + L_t (+ 0.02 * SMART each) + L_MLM / avg_mask.
+                        loss = 0.0
                         for k, task in enumerate(tasks):
-                            per_row, nll = per_sample_loss(outputs[k], targets[k], setup["loss"], class_weights[task])
-                            task_losses.append(COMMON["mtl_task_weight"] * per_row.sum() / len(batch))
-                            nlls.append(nll.detach())
-                        joint_loss = None
-                        if setup["head"] == "fac":
-                            pair = targets[0] * n_t + targets[1]
-                            joint_loss = IMPROVE["joint_weight"] * F.cross_entropy(
-                                outputs[2], pair, reduction="sum") / len(batch)
-                        loss = task_losses[0] + task_losses[1] + (joint_loss if joint_loss is not None else 0.0)
+                            task_loss = F.cross_entropy(outputs[k].float(), targets[k]) * share
+                            if setup["smart"]:
+                                perturbed = model(author_smart_ids(ids), mask)[k]
+                                task_loss = task_loss + SMART["weight"] * sym_kl_sum(perturbed, outputs[k])
+                            loss = loss + task_loss
+                        mlm_sum = F.cross_entropy(outputs[2].float(), mlm_target[mlm_target != -100],
+                                                  reduction="sum")
+                        loss = loss + mlm_sum / labelled / avg_mask
                     elif len(tasks) == 1:
                         # base_trainer.py: CrossEntropyLoss (mean) over the 128-row batch.
                         loss = F.cross_entropy(outputs[0].float(), targets[0]) * share
@@ -684,70 +654,8 @@ def train(args):
                                 perturbed = model(author_smart_ids(ids), mask)[k]
                                 task_loss = task_loss + SMART["weight"] * sym_kl_sum(perturbed, outputs[k])
                             loss = loss + COMMON["mtl_task_weight"] * task_loss
-                if not surgery:
-                    scaler.scale(loss).backward()
-                else:
-                    # Separate gradients per task on the encoder; heads and g_joint use raw sums.
-                    extra = [outputs[-1]] if opt_kind == "patgrad" else []
-                    grads_s = torch.autograd.grad(scaler.scale(task_losses[0]), params + extra,
-                                                  retain_graph=True, allow_unused=True)
-                    grads_t = torch.autograd.grad(scaler.scale(task_losses[1]), params + extra,
-                                                  retain_graph=joint_loss is not None, allow_unused=True)
-                    grads_j = (torch.autograd.grad(scaler.scale(joint_loss), params, allow_unused=True)
-                               if joint_loss is not None else [None] * len(params))
-                    for i, p in enumerate(params):
-                        if i in encoder_index:
-                            if grads_s[i] is not None:
-                                buf_s[i] += grads_s[i]
-                            if grads_t[i] is not None:
-                                buf_t[i] += grads_t[i]
-                            direct = (grads_j[i],)
-                        else:
-                            direct = (grads_s[i], grads_t[i], grads_j[i])
-                        for g in direct:
-                            if g is not None:
-                                p.grad = g if p.grad is None else p.grad.add_(g)
-                    if opt_kind == "patgrad":
-                        with torch.no_grad():
-                            # Pair conflict from per-row gradients at the shared [CLS] vector.
-                            cos = F.cosine_similarity(grads_s[-1].float(), grads_t[-1].float(), dim=1, eps=1e-12)
-                            pair = targets[0] * n_t + targets[1]
-                            ok = torch.isfinite(cos)
-                            ema_by_class(pair_conflict.view(-1), pair[ok], 0.5 * (1 - cos[ok]), n_s * n_t)
-                            for k, task in enumerate(tasks):
-                                ema_by_class(difficulty[task], targets[k], nlls[k], NUM_LABELS[task])
-                            a_rows = pair_conflict.view(-1)[pair]
-                            for k, task in enumerate(tasks):
-                                d = difficulty[task] / difficulty[task].mean()
-                                urgency[k] += (a_rows * class_weights[task][targets[k]] * d[targets[k]]).sum()
+                scaler.scale(loss).backward()
                 batch_loss += float(loss.detach())
-            if surgery:
-                with torch.no_grad():
-                    stats = torch.stack([torch.stack([
-                        sum((buf_s[i] * buf_t[i]).sum() for i in groups[g]),
-                        sum(buf_s[i].pow(2).sum() for i in groups[g]),
-                        sum(buf_t[i].pow(2).sum() for i in groups[g])]) for g in group_names]).double().tolist()
-                    protect_sentiment = opt_kind == "patgrad" and float(urgency[0]) >= float(urgency[1])
-                    steps_protect_sentiment += protect_sentiment
-                    totals = np.sum(stats, axis=0)
-                    if np.all(np.isfinite(totals)) and totals[1] > 0 and totals[2] > 0:
-                        epoch_global_cos.append(totals[0] / math.sqrt(totals[1] * totals[2]))
-                    for g, (dot, ns, nt) in zip(group_names, stats):
-                        alpha = gamma = 1.0
-                        valid = math.isfinite(dot) and math.isfinite(ns) and math.isfinite(nt) and ns > 0 and nt > 0
-                        if valid:
-                            epoch_cos[g].append(dot / math.sqrt(ns * nt))
-                        if valid and dot < 0 and g in active:
-                            projected += 1
-                            if opt_kind == "pcgrad":
-                                alpha, gamma = 1 - dot / ns, 1 - dot / nt
-                            elif protect_sentiment:
-                                alpha = 1 - dot / ns  # g_t loses its component along g_s
-                            else:
-                                gamma = 1 - dot / nt  # g_s loses its component along g_t
-                        for i in groups[g]:
-                            combined = buf_s[i].mul_(alpha).add_(buf_t[i], alpha=gamma)
-                            params[i].grad = combined if params[i].grad is None else params[i].grad.add_(combined)
             scaler.step(optimizer)
             scaler.update()
             if teacher is not None:
@@ -787,25 +695,6 @@ def train(args):
                   if device.type == "cuda" else None}
         if student_val is not None:
             record["student_val"] = student_val
-        if surgery:
-            all_cos = [c for g in group_names for c in epoch_cos[g]]
-            group_mean = {g: float(np.mean(epoch_cos[g])) if epoch_cos[g] else None for g in group_names}
-            record["surgery"] = {
-                "active_groups": sorted(active),
-                "group_cos_mean": group_mean,
-                "group_conflict_rate": float(np.mean([c < 0 for c in all_cos])) if all_cos else None,
-                "global_cos_mean": float(np.mean(epoch_global_cos)) if epoch_global_cos else None,
-                "global_conflict_rate": float(np.mean([c < 0 for c in epoch_global_cos])) if epoch_global_cos else None,
-                "projections_per_step": projected / len(batches),
-                "protect_sentiment_rate": steps_protect_sentiment / len(batches) if opt_kind == "patgrad" else None,
-                "pair_conflict": pair_conflict.tolist() if opt_kind == "patgrad" else None,
-            }
-            if opt_kind == "patgrad" and epoch == IMPROVE["patgrad_warmup_epochs"]:
-                # Layer probing: keep the top-k groups with the lowest mean cos(g_s, g_t) in warm-up.
-                ranked = sorted((c, g) for g, c in group_mean.items() if c is not None)
-                active = {g for _, g in ranked[:IMPROVE["patgrad_topk"]]}
-                record["surgery"]["selected_groups"] = sorted(active)
-                log(f"{run_name}: PaTGrad surgery on {sorted(active)}")
         if args.test_every_epoch:
             test_logits, test_metrics = evaluate("test", selected)
             for k, task in enumerate(tasks):
@@ -830,7 +719,7 @@ def train(args):
                 log(f"{run_name}: early stop after epoch {epoch} (patience {setup['patience']})")
                 break
 
-    # ---- test with the selected weights
+    # ---- test with the selected weights (the EMA teacher's for CR-SD, loaded into the model)
     student_result = None
     if teacher is not None:
         model.load_state_dict(best_student["state"])
@@ -855,17 +744,6 @@ def train(args):
         arrays[f"val_by_epoch_{task}"] = np.stack(val_history[task])
         if test_history[task]:
             arrays[f"test_by_epoch_{task}"] = np.stack(test_history[task])
-    joint_decode = None
-    if setup.get("head") == "fac":
-        arrays["val_joint"], arrays["test_joint"] = best["val_logits"][2], test_logits[2]
-        # Joint argmax (inference option 2): the max over the other task gives each task's label
-        # of the single most likely (s, t) pair.
-        joint_decode = {}
-        for split, joint in (("val", best["val_logits"][2]), ("test", test_logits[2])):
-            cube = joint.reshape(-1, n_s, n_t)
-            joint_decode[split] = {
-                "sentiment": task_metrics(labels[split]["sentiment"][eval_index[split]], cube.max(axis=2)),
-                "topic": task_metrics(labels[split]["topic"][eval_index[split]], cube.max(axis=1))}
     np.savez_compressed(run_dir / "logits.npz", **arrays)
     if args.fold is not None:
         oof_logits = predict(model, [sequences["train"][i] for i in held_out], pad_id, device,
@@ -891,7 +769,7 @@ def train(args):
         "status": status, "run_name": run_name, "benchmark_eligible": not debug,
         "runner_sha256": code["runner_sha256"], "best_epoch": best["epoch"], "epochs_run": len(val_history[tasks[0]]),
         "selection_score": best["score"], "val": val_metrics, "test": test_metrics,
-        "joint_decode": joint_decode, "student": student_result,
+        "student": student_result,
         "oof_accuracy": {task: float((oof_logits[k].argmax(-1) == labels["train"][task][held_out]).mean())
                          for k, task in enumerate(tasks)} if args.fold is not None else None,
         "timing": {"step_seconds_mean": float(times.mean()), "step_seconds_median": float(np.median(times)),

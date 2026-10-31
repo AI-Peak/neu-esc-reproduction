@@ -20,9 +20,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 RUNNER = HERE / "neu_esc_kaggle.py"
 BACKBONES = ("phobert", "visobert")
-SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart")
+SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart", "mtl_mlm", "mtl_mlm_smart")
 # Relative cost per run, used only for ordering: SMART adds two forward+backward passes.
-COST = {"mtl_smart": 3.0, "mtl": 1.0, "st_sentiment": 0.6, "st_topic": 0.6}
+COST = {"mtl_smart": 3.0, "mtl": 1.0, "st_sentiment": 0.6, "st_topic": 0.6, "mtl_mlm": 2.0, "mtl_mlm_smart": 4.2}
 
 
 def visible_gpus():
@@ -42,7 +42,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--data-dir", required=True)
     parser.add_argument("--out-dir", required=True)
-    parser.add_argument("--seeds", nargs="+", type=int, required=True)
+    parser.add_argument("--seeds", nargs="+", type=int, help="with --backbones/--setups: every combination")
+    parser.add_argument("--jobs", nargs="+", metavar="BACKBONE:SETUP:SEED",
+                        help="explicit job list instead of the seeds x backbones x setups grid")
     parser.add_argument("--backbones", nargs="+", default=list(BACKBONES), choices=BACKBONES)
     parser.add_argument("--setups", nargs="+", default=list(SETUPS), choices=SETUPS)
     parser.add_argument("--gpus", nargs="+", help="GPU indices; default: all visible (CPU if none)")
@@ -50,7 +52,18 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     gpus = args.gpus or visible_gpus() or [""]
-    jobs = [(b, s, seed) for seed in args.seeds for b in args.backbones for s in args.setups]
+    if args.jobs:
+        jobs = []
+        for spec in args.jobs:
+            backbone, setup, seed = spec.split(":")
+            if backbone not in BACKBONES or setup not in SETUPS:
+                parser.error(f"bad job {spec}")
+            jobs.append((backbone, setup, int(seed)))
+    elif args.seeds:
+        jobs = [(b, s, seed) for seed in args.seeds for b in args.backbones for s in args.setups]
+    else:
+        parser.error("give --seeds or --jobs")
+    backbones = sorted({job[0] for job in jobs})
     jobs.sort(key=lambda job: -COST[job[1]])
     out_dir = Path(args.out_dir)
     log_dir = out_dir / "logs"
@@ -58,7 +71,7 @@ def main(argv=None):
 
     if not args.no_prefetch:
         # Cache each model once so two processes never download the same files at once.
-        subprocess.run([sys.executable, str(RUNNER), "prefetch", "--backbones", *args.backbones], check=True)
+        subprocess.run([sys.executable, str(RUNNER), "prefetch", "--backbones", *backbones], check=True)
 
     lock = threading.Lock()
     results = []
