@@ -8,7 +8,7 @@ Thư mục này là bộ chạy gọn cho 40 run tái lập Table 6 của NEU-ES
 | | `mtl` | 2-task |
 | | `mtl_smart` | 2-task & SMART |
 
-Runner bám code công khai của tác giả ([hung20gg/multi-task-bert@b5637cc](https://github.com/hung20gg/multi-task-bert/tree/b5637cc0a8a7b5e88e794d180c11902405548eb5), bản sao nằm ở [reports/method/reference/](../reports/method/reference/)).
+Runner bám code công khai của tác giả ([hung20gg/multi-task-bert@b5637cc](https://github.com/hung20gg/multi-task-bert/tree/b5637cc0a8a7b5e88e794d180c11902405548eb5), bản sao nằm ở [reports/baseline_reproduce/author_code/](../reports/baseline_reproduce/author_code/)).
 
 ## Bám code tác giả ở những điểm nào
 
@@ -57,10 +57,10 @@ Metrics có thêm `weighted_f1_author_mtl`: trainer 2-task của tác giả gọ
 
 ```bash
 python src_baseline/check_runs.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --seeds 42 43 44 45 46
-python src_baseline/aggregate.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 --out reports/kaggle_results
+python src_baseline/aggregate.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 runs/gap/a --out reports/baseline_reproduce/metrics
 ```
 
-Kết quả thô từng run (logits, predictions) nằm trong `runs/` và không commit. Bảng tổng hợp nhỏ `reports/kaggle_results/` (gồm `summary.md`, `summary.csv`, `per_run.csv`, `gains.csv`) thì được commit làm kết quả tái lập.
+Kết quả thô từng run (logits, predictions) nằm trong `runs/` và không commit. Bảng tổng hợp nhỏ `reports/baseline_reproduce/metrics/` (gồm `summary.md`, `summary.csv`, `per_run.csv`, `gains.csv`) thì được commit làm kết quả tái lập.
 
 **Điều kiện đi tiếp là điều kiện kỹ thuật, không phải điểm số.** `check_runs.py` cho PASS khi:
 - run chạy xong đúng protocol (không phải run smoke/debug);

@@ -1,6 +1,6 @@
 """Summarise CR-SD (selfdistill) and CR-SD + D (crsd_ens) runs against the reproduced baselines.
 
-    python src_caitien/aggregate_caitien.py runs/caitien runs/s42 ... runs/gap/a --out reports/crsd_results
+    python src_improvement/aggregate_improvement.py runs/improvement runs/s42 ... runs/gap/a --out reports/improvement
 
 Reads every */metrics.json under the given directories (fold runs, debug runs and fp32 runs are
 skipped). Writes per_run.csv and summary.md with mean +- std per backbone/setup, the EMA student

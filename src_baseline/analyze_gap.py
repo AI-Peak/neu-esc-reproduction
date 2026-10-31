@@ -8,7 +8,7 @@ Inputs (run directories with metrics.json / logits.npz / config.json):
                        and the MLM rows (mtl_mlm, mtl_mlm_smart; seeds 42..46)
   runs/gap/b           fp32 reruns of mtl / mtl_smart (seeds 42..46) and SMART with embedding noise
 Prints the tables (markdown) and writes gap_runs.csv to --out; the write-up is
-Reported_ReproduceBase/README.md.
+reports/baseline_reproduce/README.md.
 """
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ def welch(a, b):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--out", default=str(ROOT / "Reported_ReproduceBase"))
+    parser.add_argument("--out", default=str(ROOT / "reports" / "baseline_reproduce"))
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

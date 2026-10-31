@@ -137,11 +137,26 @@ Cùng 5 seed 42–46, chạy một lần bằng fp16 và một lần bằng fp32
 | PhoBERT | 82.30 / 78.80 | 82.90 / 79.02 | 72.49 / 72.38 |
 | ViSoBERT | 82.30 / 77.77 | 82.77 / 79.28 | 72.21 / 70.96 |
 
-### Dữ liệu và cách tạo lại
+### Thư mục này gồm những gì
 
-- `gap_runs.csv`: kết quả từng run (170 run).
-- Lệnh tạo lại các bảng: `python src_baseline/analyze_gap.py`. Lệnh in bảng ra màn hình và ghi lại file CSV.
+| File / thư mục | Nội dung |
+|---|---|
+| `README.md` | Báo cáo này |
+| `gap_runs.csv` | Kết quả từng run (170 run) dùng cho báo cáo |
+| `metrics/` | Bảng đầy đủ accuracy, macro-F1, weighted-F1 của 15 seed so với paper (`src_baseline/aggregate.py`) |
+| `paper/` | Số liệu Table 6 và Figure 3 chép từ paper, phần audit Figure 3 |
+| `author_code/` | Bản sao code tác giả (commit b5637cc0), dùng cho `src_baseline/check_author_smart.py` |
+| `data_source/` | Hash tải dữ liệu, thống kê nhãn, đối chiếu CSV gốc với bản `_processed` |
+
+### Cách tạo lại
+
+- Bảng phân tích: `python src_baseline/analyze_gap.py`. Lệnh in các bảng ra màn hình và ghi lại `gap_runs.csv`.
+- Bảng metrics: `python src_baseline/aggregate.py runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 runs/gap/a --out reports/baseline_reproduce/metrics`
 - Run gốc nằm trong:
   - `runs/s42..s46`: 5 seed gốc.
   - `runs/gap/a`: thêm 10 seed và các dòng MLM.
   - `runs/gap/b`: fp32 và SMART trên embedding.
+- Có hai phiên bản runner:
+  - 40 run gốc chạy bằng `2a2a25ae…`.
+  - Các run sau chạy bằng `5a56bc35…`. Bản này chỉ thêm code MLM và tùy chọn `--jobs`.
+  - Hai bản cho logits giống hệt nhau ở các setup cũ (đã kiểm trên CPU), nên gộp chung được.

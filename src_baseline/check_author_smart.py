@@ -2,7 +2,7 @@
 
     python src_baseline/check_author_smart.py
 
-Runs reports/method/reference/utils__loss_function.py SMARTLoss and the runner's
+Runs reports/baseline_reproduce/author_code/utils__loss_function.py SMARTLoss and the runner's
 author_smart_ids/sym_kl_sum on the same RNG stream, for both task branches.
 """
 import importlib.util
@@ -15,7 +15,7 @@ import neu_esc_kaggle as runner
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
-    "author_loss", ROOT / "reports/method/reference/utils__loss_function.py")
+    "author_loss", ROOT / "reports/baseline_reproduce/author_code/utils__loss_function.py")
 author = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(author)
 

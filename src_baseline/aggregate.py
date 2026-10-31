@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-# reports/reference/table6.csv rows 04/05 (single task), 07/08 (2-task), 10/11 (2-task & SMART),
+# reports/baseline_reproduce/paper/table6.csv rows 04/05 (single task), 07/08 (2-task), 10/11 (2-task & SMART),
 # 13/14 (2-task & MLM), 16/17 (2-task & MLM & SMART).
 PAPER = {
     ("visobert", "single"): {"sentiment": (82.78, 75.79, 82.17), "topic": (77.94, 60.65, 78.06)},
@@ -171,6 +171,7 @@ def main(argv=None):
             "## Gains between setups (macro-F1)", "", *gain_lines, "",
             "## Runner version (SHA-256 of neu_esc_kaggle.py)", "", *code_lines, ""]
     (out / "summary.md").write_text("\n".join(text), encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")
     print("\n".join(text))
     return 0
 

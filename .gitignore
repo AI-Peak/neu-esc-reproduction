@@ -28,7 +28,7 @@ __pycache__/
 /hf_cache/
 /torch_cache/
 # Downloaded tokenizer resources stay local; revisions/hashes remain in configs.
-/reports/method/backbones/*/tokenizer/
+/reports/baseline_reproduce/backbones/*/tokenizer/
 *.pt
 *.pth
 *.ckpt

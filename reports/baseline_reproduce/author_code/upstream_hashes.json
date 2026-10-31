@@ -11,6 +11,6 @@
     "utils/dataloader.py": "033df8846dfa2a684f6117f255618d2588fd304d24e6232c39df05548ee042e2",
     "utils/loss_function.py": "d13004c8224071819fc3acb3394664c0b33ecd1a1df3ebc09595aa3a5d79db7f"
   },
-  "archive": "reports/method/reference-source.zip",
+  "archive": "reports/baseline_reproduce/author_code-source.zip",
   "python_copies": "LF normalized for portable Git checkout"
 }

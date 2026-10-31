@@ -1,17 +1,17 @@
-# src_caitien: code cải tiến
+# src_improvement: code cải tiến (improvement)
 
 Thư mục này = **[src_baseline/](../src_baseline/README.md) + CR-SD + CR-SD + D**, ngoài ra không có gì khác.
 
-- Runner `neu_esc_caitien.py` được dựng từ đúng file `src_baseline/neu_esc_kaggle.py`, chỉ thêm phần cải tiến.
+- Runner `neu_esc_improvement.py` được dựng từ đúng file `src_baseline/neu_esc_kaggle.py`, chỉ thêm phần cải tiến.
 - Mọi setup của baseline (`st_sentiment`, `st_topic`, `mtl`, `mtl_smart`, `mtl_mlm`, `mtl_mlm_smart`) vẫn chạy được và cho logits **giống hệt** runner baseline. Điều này đã kiểm trên CPU.
 - Dữ liệu, backbone, siêu tham số chung, cách chọn checkpoint và các file output đều giống baseline; xem README của baseline.
 
 | File | Nội dung |
 |---|---|
-| `neu_esc_caitien.py` | Runner: `fetch`, `prefetch`, `train`, `ensemble-targets` |
+| `neu_esc_improvement.py` | Runner: `fetch`, `prefetch`, `train`, `ensemble-targets` |
 | `run_queue.py` | Chạy nhiều job, mỗi GPU một job; `--folds N` để chạy các fold teacher |
 | `check_runs.py` | Kiểm tra kỹ thuật các run (PASS/FAIL) |
-| `aggregate_caitien.py` | So CR-SD với baseline reproduce (trung bình ± std, Δ, Welch t-test) |
+| `aggregate_improvement.py` | So CR-SD với baseline reproduce (trung bình ± std, Δ, Welch t-test) |
 
 ## Thay đổi so với baseline
 
@@ -21,7 +21,7 @@ Thư mục này = **[src_baseline/](../src_baseline/README.md) + CR-SD + CR-SD +
 4. Thêm output mới: kết quả của student, `student_logits.npz` và `oof.npz`.
 5. Thêm lệnh `ensemble-targets`.
 
-Code ablation giai thừa cũ (Factorized head, PCGrad/PaTGrad, CB-Focal) đã được gỡ khỏi thư mục này vì không cải thiện. Code đó vẫn còn trong lịch sử git, và kết quả 120 run nằm trong `reports/caitien_results/` (bản cũ).
+Code ablation giai thừa cũ (Factorized head, PCGrad/PaTGrad, CB-Focal) đã được gỡ khỏi thư mục này vì không cải thiện. Code và kết quả 120 run (`reports/caitien_results/`, đã xóa) vẫn còn trong lịch sử git.
 
 ## Các setup
 
@@ -43,13 +43,13 @@ Out-of-fold nghĩa là mỗi câu train chỉ được dự đoán bởi model *
 
 ```bash
 # 1. Teacher: chia train thành 5 fold (cố định, FOLD_SEED = 2026), mỗi run train trên 4 fold và dự đoán fold còn lại -> oof.npz
-python src_caitien/run_queue.py --setups mtl --folds 5 --seeds 42 --backbones phobert visobert --data-dir DATA --out-dir runs/teachers
+python src_improvement/run_queue.py --setups mtl --folds 5 --seeds 42 --backbones phobert visobert --data-dir DATA --out-dir runs/teachers
 
 # 2. Gộp xác suất out-of-fold của mọi run (có thể trộn backbone và seed) thành một file
-python src_caitien/neu_esc_caitien.py ensemble-targets runs/teachers/*-f?of5 --out runs/teachers/ens_targets.npz
+python src_improvement/neu_esc_improvement.py ensemble-targets runs/teachers/*-f?of5 --out runs/teachers/ens_targets.npz
 
 # 3. Train CR-SD + D
-python src_caitien/run_queue.py --setups crsd_ens --seeds 42 43 --backbones phobert visobert --data-dir DATA --out-dir runs/caitien -- --ens-targets runs/teachers/ens_targets.npz
+python src_improvement/run_queue.py --setups crsd_ens --seeds 42 43 --backbones phobert visobert --data-dir DATA --out-dir runs/improvement -- --ens-targets runs/teachers/ens_targets.npz
 ```
 
 Ở bước 2, mọi dòng train phải có ít nhất một dự đoán out-of-fold, nên mỗi bộ fold phải đủ cả 5 fold. Bước 3 kiểm tra file target được tạo từ đúng train CSV (SHA-256).
@@ -57,16 +57,16 @@ python src_caitien/run_queue.py --setups crsd_ens --seeds 42 43 --backbones phob
 Lệnh chạy CR-SD thường và lệnh tổng hợp:
 
 ```bash
-python src_caitien/run_queue.py --setups selfdistill --seeds 42 43 --data-dir DATA --out-dir runs/caitien
-python src_caitien/aggregate_caitien.py runs/caitien runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 runs/gap/a --out reports/crsd_results
+python src_improvement/run_queue.py --setups selfdistill --seeds 42 43 --data-dir DATA --out-dir runs/improvement
+python src_improvement/aggregate_improvement.py runs/improvement runs/s42 runs/s43 runs/s44 runs/s45 runs/s46 runs/gap/a --out reports/improvement
 ```
 
 ## Test nhanh trên CPU
 
 ```bash
-python src_caitien/run_queue.py --setups mtl --folds 2 --seeds 42 --backbones phobert --data-dir DATA --out-dir runs/cpu --no-prefetch -- --model-path TINY --epochs 1 --max-steps-per-epoch 3 --limit-eval 200
-python src_caitien/neu_esc_caitien.py ensemble-targets runs/cpu/phobert-mtl-s42-f0of2 runs/cpu/phobert-mtl-s42-f1of2 --out runs/cpu/ens.npz
-python src_caitien/neu_esc_caitien.py train --backbone phobert --setup crsd_ens --seed 42 --data-dir DATA --out-dir runs/cpu --model-path TINY --epochs 2 --max-steps-per-epoch 3 --limit-eval 200 --ens-targets runs/cpu/ens.npz
+python src_improvement/run_queue.py --setups mtl --folds 2 --seeds 42 --backbones phobert --data-dir DATA --out-dir runs/cpu --no-prefetch -- --model-path TINY --epochs 1 --max-steps-per-epoch 3 --limit-eval 200
+python src_improvement/neu_esc_improvement.py ensemble-targets runs/cpu/phobert-mtl-s42-f0of2 runs/cpu/phobert-mtl-s42-f1of2 --out runs/cpu/ens.npz
+python src_improvement/neu_esc_improvement.py train --backbone phobert --setup crsd_ens --seed 42 --data-dir DATA --out-dir runs/cpu --model-path TINY --epochs 2 --max-steps-per-epoch 3 --limit-eval 200 --ens-targets runs/cpu/ens.npz
 ```
 
 `TINY` là một model nhỏ tự tạo (cùng tokenizer với PhoBERT), chỉ dùng để kiểm tra code chạy được.

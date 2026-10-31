@@ -1,10 +1,10 @@
 """Run backbone x setup x seed jobs, one process per GPU (Kaggle T4 x2 -> two at a time).
 
-    python src_caitien/run_queue.py --data-dir DATA --out-dir runs --seeds 42
-    python src_caitien/run_queue.py --data-dir DATA --out-dir smoke --seeds 42 -- --epochs 1 --max-steps-per-epoch 30
-    python src_caitien/run_queue.py --setups selfdistill --seeds 42 43 --data-dir DATA --out-dir runs/caitien
+    python src_improvement/run_queue.py --data-dir DATA --out-dir runs --seeds 42
+    python src_improvement/run_queue.py --data-dir DATA --out-dir smoke --seeds 42 -- --epochs 1 --max-steps-per-epoch 30
+    python src_improvement/run_queue.py --setups selfdistill --seeds 42 43 --data-dir DATA --out-dir runs/improvement
 
-Arguments after `--` are passed to every `neu_esc_caitien.py train` call. Runs whose
+Arguments after `--` are passed to every `neu_esc_improvement.py train` call. Runs whose
 metrics.json is already COMPLETED are skipped by the trainer, so a queue can be relaunched
 after an interrupted session. Jobs start longest-first so both GPUs finish close together.
 """
@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-RUNNER = HERE / "neu_esc_caitien.py"
+RUNNER = HERE / "neu_esc_improvement.py"
 BACKBONES = ("phobert", "visobert")
 SETUPS = ("st_sentiment", "st_topic", "mtl", "mtl_smart", "mtl_mlm", "mtl_mlm_smart", "selfdistill", "crsd_ens")
 # Relative cost per run, used only for ordering: SMART adds two forward+backward passes,
@@ -49,7 +49,7 @@ def main(argv=None):
     parser.add_argument("--jobs", nargs="+", metavar="BACKBONE:SETUP:SEED",
                         help="explicit job list instead of the seeds x backbones x setups grid")
     parser.add_argument("--backbones", nargs="+", default=list(BACKBONES), choices=BACKBONES)
-    parser.add_argument("--runner", default=str(RUNNER), help="trainer script (default neu_esc_caitien.py)")
+    parser.add_argument("--runner", default=str(RUNNER), help="trainer script (default neu_esc_improvement.py)")
     parser.add_argument("--setups", nargs="+", default=list(SETUPS), choices=SETUPS)
     parser.add_argument("--folds", type=int, help="run every fold k of N as `train --fold k --num-folds N` "
                         "(teachers for crsd_ens)")

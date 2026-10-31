@@ -23,27 +23,15 @@ Kết quả chỉ được gọi là "tái lập theo code công khai", không p
 | Đường dẫn | Nội dung |
 |---|---|
 | [src_baseline/](src_baseline/README.md) | Code baseline (reproduce NEU-ESC): runner, queue chạy 2 GPU, kiểm tra kỹ thuật, tổng hợp kết quả, notebook smoke và notebook chạy thật. **Bắt đầu từ đây.** |
-| [src_caitien/](src_caitien/README.md) | Code cải tiến: bản sao baseline cộng các setup cải tiến (factorized/PCGrad/PaTGrad/CB-Focal, CR-SD, CR-SD + ensemble distillation). |
+| [src_improvement/](src_improvement/README.md) | Code cải tiến: baseline + CR-SD (`selfdistill`) + CR-SD + D (`crsd_ens`). |
 | `kaggle/` | Chỉ chứa API token của các account Kaggle (gitignored, không commit). |
-| [docs/FINDINGS.md](docs/FINDINGS.md) | Phát hiện về dữ liệu, code tác giả, Table 6 và Figure 3; giới hạn của tuyên bố |
 | `docs/papers/` | Paper và proposal. Chỉ có trên máy, không commit |
-| [reports/reference/](reports/reference/) | Số liệu Table 6 và Figure 3 chép từ paper, phần audit Figure 3 |
-| [reports/method/reference/](reports/method/reference/) | Bản sao code tác giả, dùng cho `src_baseline/check_author_smart.py` |
-| [reports/source/](reports/source/) | Hash tải dữ liệu, thống kê nhãn, đối chiếu CSV gốc với bản `_processed` |
-| `reports/kaggle_results/` | Sẽ chứa kết quả 40 run sau khi chạy `src_baseline/aggregate.py` |
+| [reports/baseline_reproduce/](reports/baseline_reproduce/README.md) | **Báo cáo baseline reproduce**: số chốt, nguyên nhân lệch so với paper, metrics 15 seed, số liệu paper, bản sao code tác giả, hash dữ liệu |
+| [reports/improvement/](reports/improvement/) | Kết quả cải tiến CR-SD / CR-SD + D so với baseline |
 
 ## Dữ liệu
 
 Không commit dữ liệu, vì repo của tác giả không có license phân phối. Runner tự tải 6 file CSV từ repo tác giả và kiểm SHA-256 (`python src_baseline/neu_esc_kaggle.py fetch --data-dir …`). Thư mục `data/raw/` và `runs/` đã được `.gitignore`.
-
-## Pipeline cũ
-
-Pipeline cũ (`src/neu_esc`, configs, tests, scripts, CI, các notebook tham khảo, tài liệu module) được viết cho Colab A100. Nó đã được gỡ khỏi repo trước khi chạy tái lập vì ba lý do:
-- SMART khác code tác giả;
-- PhoBERT tự tách từ, lệch 29% mẫu so với bản của tác giả;
-- chạy fp32 deterministic, quá chậm trên T4.
-
-Bản gốc vẫn còn trong git history ở commit `d626a86`.
 
 ## Quy định
 
